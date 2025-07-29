@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation'; // Import do useRouter para navegação
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
@@ -9,208 +10,233 @@ import { Switch } from '../components/ui/switch';
 import { Card, CardContent } from '../components/ui/card';
 
 interface Servico {
+  id: number;
+  cliente: string;
   data: string;
-  tipo: string;
-  valor: string;
+  descricao: string;
+  finalizado: boolean;
+  status: string;
   observacoes: string;
-  pago: boolean;
 }
 
-type ViewMode = 'menu' | 'cadastrar' | 'ver' | 'atualizar' | 'deletar';
+type ViewMode = 'ver' | 'cadastrar';
 
-export default function Servicos() {
-  const [viewMode, setViewMode] = useState<ViewMode>('menu');
-  const [servico, setServico] = useState<Servico>({
-    data: '',
-    tipo: '',
-    valor: '',
-    observacoes: '',
-    pago: false,
-  });
+const STATUS_OPTIONS = [
+  'Em fila',
+  'Esperando cliente',
+  'Aguardando peça',
+  'Em andamento',
+  'Finalizado',
+  'Cancelado',
+  'Entregue',
+  'Pendente de pagamento',
+];
 
-  const handleChange = <K extends keyof Servico>(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    field: K
-  ) => {
-    const value = field === 'pago' && e.target instanceof HTMLInputElement
-      ? e.target.checked
-      : e.target.value;
+export default function ServicosPage() {
+  const router = useRouter(); // Hook de navegação
+  const [viewMode, setViewMode] = useState<ViewMode>('ver');
+  const [servicos, setServicos] = useState<Servico[]>([]);
+  const [servicoAtual, setServicoAtual] = useState<Servico>(criarServicoVazio());
+  const [filtro, setFiltro] = useState('');
 
-    setServico((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handlePagoChange = (checked: boolean) => {
-    setServico((prev) => ({
-      ...prev,
-      pago: checked,
-    }));
-  };
-
-  const resetServico = () => {
-    setServico({
+  function criarServicoVazio(): Servico {
+    return {
+      id: Date.now(),
+      cliente: '',
       data: '',
-      tipo: '',
-      valor: '',
+      descricao: '',
+      finalizado: false,
+      status: 'Em fila',
       observacoes: '',
-      pago: false,
+    };
+  }
+
+  function salvarServico() {
+    if (!servicoAtual.cliente || !servicoAtual.data || !servicoAtual.descricao) {
+      alert('Preencha os campos obrigatórios.');
+      return;
+    }
+
+    setServicos((prev) => {
+      const existe = prev.some((s) => s.id === servicoAtual.id);
+      return existe
+        ? prev.map((s) => (s.id === servicoAtual.id ? servicoAtual : s))
+        : [...prev, servicoAtual];
     });
-  };
 
-  const containerClass = "min-h-screen flex flex-col items-center justify-center px-6 py-10 bg-[#0f172a] text-white";
-  const cardClass = "max-w-lg w-full bg-[#1a2333] border border-gray-700 rounded-lg shadow-md";
-  const inputClass = "bg-[#162a46] border border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
-  const buttonPrimaryClass = "bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg shadow-md transition-transform hover:scale-[1.03]";
-  const buttonOutlineClass = "border border-gray-500 text-gray-300 hover:bg-gray-700 hover:text-white py-3 rounded-lg transition-colors";
-  const titleClass = "text-3xl font-semibold mb-8 text-white";
+    alert('Serviço registrado com sucesso!');
+    setServicoAtual(criarServicoVazio());
+    setViewMode('ver');
+  }
 
-  if (viewMode === 'menu') {
-    return (
-      <div className={containerClass}>
-        <h1 className="text-4xl font-semibold mb-12 text-white">Menu Serviços</h1>
-        <div className="flex flex-col space-y-6 max-w-sm w-full">
-          <Button onClick={() => setViewMode('cadastrar')} className={buttonPrimaryClass}>
-            Registrar Serviço
-          </Button>
-          <Button onClick={() => setViewMode('ver')} className={buttonPrimaryClass}>
-            Ver Serviços
-          </Button>
-          <Button onClick={() => setViewMode('atualizar')} className={buttonPrimaryClass}>
-            Atualizar Serviço
-          </Button>
-          <Button onClick={() => setViewMode('deletar')} className={buttonPrimaryClass}>
-            Deletar Serviço
-          </Button>
+  const servicosFiltrados = servicos.filter((s) =>
+    `${s.cliente} ${s.descricao}`.toLowerCase().includes(filtro.toLowerCase())
+  );
+
+  const inputClass =
+    'bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500';
+
+  return (
+    <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
+      <div className="max-w-6xl mx-auto">
+
+        {/* Botões de ação */}
+        <div className="flex flex-wrap justify-between items-center mb-10 gap-4">
+          <div className="space-x-4">
+            <Button onClick={() => setViewMode('ver')} className="bg-blue-600 hover:bg-blue-700">
+              Ver Serviços
+            </Button>
+            <Button
+              onClick={() => {
+                setServicoAtual(criarServicoVazio());
+                setViewMode('cadastrar');
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Cadastrar Serviço
+            </Button>
+            {/* Botão Voltar para Início */}
+            <Button
+              variant="outline"
+              className="border border-gray-500 text-gray-200 hover:bg-gray-700"
+              onClick={() => router.push('/')}
+            >
+              ← Voltar para Início
+            </Button>
+          </div>
+          {viewMode === 'ver' && (
+            <Input
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value)}
+              placeholder="Buscar por cliente ou descrição..."
+              className={inputClass + ' max-w-sm'}
+            />
+          )}
         </div>
+
+        {/* Lista de Serviços */}
+        {viewMode === 'ver' && (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {servicosFiltrados.length === 0 ? (
+              <p>Nenhum serviço encontrado.</p>
+            ) : (
+              servicosFiltrados.map((s) => (
+                <Card key={s.id} className="bg-[#1e293b] border border-gray-700">
+                  <CardContent className="p-4 space-y-1 text-sm text-gray-300">
+                    <p><strong>Cliente:</strong> {s.cliente}</p>
+                    <p><strong>Data:</strong> {s.data}</p>
+                    <p><strong>Descrição:</strong> {s.descricao}</p>
+                    <p><strong>Status:</strong> {s.status}</p>
+                    <p><strong>Finalizado:</strong> {s.finalizado ? 'Sim' : 'Não'}</p>
+                    <p><strong>Observações:</strong> {s.observacoes || '-'}</p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Formulário de cadastro/edição */}
+        {viewMode === 'cadastrar' && (
+          <Card className="bg-[#1e293b] p-6 border border-gray-700 max-w-3xl mx-auto">
+            <CardContent className="space-y-6">
+              <h2 className="text-2xl font-semibold">Cadastrar Serviço</h2>
+
+              <div>
+                <Label>Cliente *</Label>
+                <Input
+                  placeholder="Nome do cliente"
+                  value={servicoAtual.cliente}
+                  onChange={(e) => setServicoAtual({ ...servicoAtual, cliente: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <Label>Data *</Label>
+                <Input
+                  type="date"
+                  value={servicoAtual.data}
+                  onChange={(e) => setServicoAtual({ ...servicoAtual, data: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <Label>Descrição *</Label>
+                <Input
+                  placeholder="Descrição do serviço"
+                  value={servicoAtual.descricao}
+                  onChange={(e) => setServicoAtual({ ...servicoAtual, descricao: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <Label>Status *</Label>
+                <select
+                  value={servicoAtual.status}
+                  onChange={(e) => setServicoAtual({ ...servicoAtual, status: e.target.value })}
+                  className="w-full rounded border border-gray-600 bg-[#1e293b] text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {STATUS_OPTIONS.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={servicoAtual.finalizado}
+                  onCheckedChange={(checked) =>
+                    setServicoAtual((prev) => ({ ...prev, finalizado: checked }))
+                  }
+                />
+                <Label>Finalizado?</Label>
+              </div>
+
+              <div>
+                <Label>Observações</Label>
+                <Textarea
+                  placeholder="Observações adicionais..."
+                  value={servicoAtual.observacoes}
+                  onChange={(e) =>
+                    setServicoAtual((prev) => ({ ...prev, observacoes: e.target.value }))
+                  }
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Botões alinhados à direita */}
+              <div className="flex justify-end space-x-4 pt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setServicoAtual(criarServicoVazio());
+                    setViewMode('ver');
+                  }}
+                >
+                  ← Voltar
+                </Button>
+                <Button
+                  onClick={salvarServico}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  Salvar Serviço
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setViewMode('ver')}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
-    );
-  }
-
-  if (viewMode === 'cadastrar') {
-    return (
-      <div className={containerClass}>
-        <h1 className={titleClass}>Cadastro de Serviço</h1>
-        <Card className={cardClass}>
-          <CardContent className="space-y-6 px-8 py-6">
-            <div>
-              <Label className="text-gray-300">Data</Label>
-              <Input
-                type="date"
-                value={servico.data}
-                onChange={(e) => handleChange(e, 'data')}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <Label className="text-gray-300">Tipo de Serviço</Label>
-              <Input
-                placeholder="Ex: Troca de óleo"
-                value={servico.tipo}
-                onChange={(e) => handleChange(e, 'tipo')}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <Label className="text-gray-300">Valor (R$)</Label>
-              <Input
-                type="number"
-                placeholder="100.00"
-                value={servico.valor}
-                onChange={(e) => handleChange(e, 'valor')}
-                className={inputClass}
-              />
-            </div>
-            <div className="flex items-center space-x-3">
-              <Switch checked={servico.pago} onCheckedChange={handlePagoChange} />
-              <Label className="text-gray-300 select-none cursor-pointer">Pago?</Label>
-            </div>
-            <div>
-              <Label className="text-gray-300">Observações</Label>
-              <Textarea
-                placeholder="Observações do serviço"
-                value={servico.observacoes}
-                onChange={(e) => handleChange(e, 'observacoes')}
-                className={inputClass}
-                rows={4}
-              />
-            </div>
-
-            <div className="flex space-x-6 justify-end mt-8">
-              <Button
-                onClick={() => {
-                  alert('Serviço registrado!');
-                  resetServico();
-                  setViewMode('menu');
-                }}
-                className={buttonPrimaryClass}
-              >
-                Registrar
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  resetServico();
-                  setViewMode('menu');
-                }}
-                className={buttonOutlineClass}
-              >
-                Cancelar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (viewMode === 'ver') {
-    return (
-      <div className={containerClass}>
-        <h1 className={titleClass}>Ver Serviços</h1>
-        <Button
-          onClick={() => setViewMode('menu')}
-          className="mb-6 bg-gray-700 hover:bg-gray-800 text-white px-6 py-2 rounded-lg shadow-md transition-transform hover:scale-[1.03]"
-        >
-          Voltar
-        </Button>
-        <p className="max-w-3xl text-gray-400">
-          Aqui você implementa a lista de serviços...
-        </p>
-      </div>
-    );
-  }
-
-  if (viewMode === 'atualizar') {
-    return (
-      <div className={containerClass}>
-        <h1 className={titleClass}>Atualizar Serviço</h1>
-        <Button
-          onClick={() => setViewMode('menu')}
-          className="mb-6 bg-gray-700 hover:bg-gray-800 text-white px-6 py-2 rounded-lg shadow-md transition-transform hover:scale-[1.03]"
-        >
-          Voltar
-        </Button>
-        <p className="max-w-3xl text-gray-400">Aqui você implementa a atualização...</p>
-      </div>
-    );
-  }
-
-  if (viewMode === 'deletar') {
-    return (
-      <div className={containerClass}>
-        <h1 className={titleClass}>Deletar Serviço</h1>
-        <Button
-          onClick={() => setViewMode('menu')}
-          className="mb-6 bg-gray-700 hover:bg-gray-800 text-white px-6 py-2 rounded-lg shadow-md transition-transform hover:scale-[1.03]"
-        >
-          Voltar
-        </Button>
-        <p className="max-w-3xl text-gray-400">Aqui você implementa a exclusão do serviço...</p>
-      </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }
