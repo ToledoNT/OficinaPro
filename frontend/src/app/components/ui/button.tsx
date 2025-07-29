@@ -3,7 +3,7 @@ import { cn } from "@/app/lib/utils"
 import * as React from "react"
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: "default" | "outline"; // declare os variants que quiser
+    variant?: "default" | "outline"; 
   }
   
   const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
