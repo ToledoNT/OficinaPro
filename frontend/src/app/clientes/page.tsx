@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
 import { useState } from "react";
+import { useRouter } from 'next/navigation';  
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Textarea } from "../components/ui/textarea";
 import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import { Card, CardContent } from "../components/ui/card";
@@ -12,6 +12,7 @@ import { Cliente, Moto } from "../interfaces/clientes-interface";
 type ViewMode = "ver" | "cadastrar" | "editar";
 
 export default function Clientes() {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>("ver");
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [clienteAtual, setClienteAtual] = useState<Cliente>(criarClienteVazio());
@@ -40,7 +41,9 @@ export default function Clientes() {
       setClientes((prev) => [...prev, clienteAtual]);
       alert("Cliente registrado!");
     } else {
-      setClientes((prev) => prev.map((c) => (c.id === clienteAtual.id ? clienteAtual : c)));
+      setClientes((prev) =>
+        prev.map((c) => (c.id === clienteAtual.id ? clienteAtual : c))
+      );
       alert("Cliente atualizado!");
     }
 
@@ -58,47 +61,14 @@ export default function Clientes() {
     c.nome.toLowerCase().includes(filtro.toLowerCase())
   );
 
+  // Classe CSS para inputs - fundo escuro e texto branco para melhor contraste no mobile
   const inputClass =
-    "bg-[#1e293b] border border-gray-600 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500";
+    "bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-wrap justify-between items-center mb-10 gap-4">
-          <div className="space-x-4">
-            <Button onClick={() => setViewMode("ver")} className="bg-blue-600 hover:bg-blue-700">
-              Ver Clientes
-            </Button>
-            <Button
-              onClick={() => {
-                setClienteAtual(criarClienteVazio());
-                setViewMode("cadastrar");
-              }}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              Cadastrar Cliente
-            </Button>
-          </div>
-          {viewMode === "ver" && (
-            <Input
-              value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
-              placeholder="Buscar cliente por nome..."
-              className={inputClass + " max-w-xs"}
-            />
-          )}
-        </div>
-
-        <div className="mb-6">
-          <Button
-            variant="outline"
-            onClick={() => window.history.back()}
-            className="border border-gray-500 text-gray-200 hover:bg-gray-700"
-          >
-            ← Voltar para página anterior
-          </Button>
-        </div>
-
+        {/* Botão Voltar na tela de cadastro/edição */}
         {(viewMode === "cadastrar" || viewMode === "editar") && (
           <div className="mb-6">
             <Button
@@ -114,6 +84,49 @@ export default function Clientes() {
           </div>
         )}
 
+        {/* Botões principais (ver, cadastrar, voltar para início) */}
+        {viewMode === "ver" && (
+          <div className="flex flex-wrap items-center gap-4 mb-4">
+            <Button
+              onClick={() => setViewMode("ver")}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Ver Clientes
+            </Button>
+            <Button
+              onClick={() => {
+                setClienteAtual(criarClienteVazio());
+                setViewMode("cadastrar");
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Cadastrar Cliente
+            </Button>
+            <Button
+              variant="outline"
+              className="border border-gray-500 text-gray-200 hover:bg-gray-700"
+              onClick={() => router.push('/')}
+            >
+              ← Voltar para Início
+            </Button>
+          </div>
+        )}
+
+        {/* Campo de busca */}
+        {viewMode === "ver" && (
+          <div className="mb-10">
+            <Input
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value)}
+              placeholder="Buscar cliente por nome..."
+              className={inputClass + " max-w-sm"}
+              spellCheck={false}
+              autoComplete="off"
+            />
+          </div>
+        )}
+
+        {/* Listagem de clientes */}
         {viewMode === "ver" && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {clientesFiltrados.length === 0 ? (
@@ -134,6 +147,7 @@ export default function Clientes() {
           </div>
         )}
 
+        {/* Formulário de cadastro/edição */}
         {(viewMode === "cadastrar" || viewMode === "editar") && (
           <FormularioCliente
             cliente={clienteAtual}
@@ -144,12 +158,18 @@ export default function Clientes() {
               setViewMode("ver");
             }}
             inputClass={inputClass}
+            onVoltar={() => {
+              setClienteAtual(criarClienteVazio());
+              setViewMode("ver");
+            }}
           />
         )}
       </div>
     </div>
   );
 }
+
+// ==================== COMPONENTES ======================
 
 function ClienteCard({
   cliente,
@@ -165,7 +185,9 @@ function ClienteCard({
       <CardContent className="p-4">
         <h3 className="text-lg font-bold mb-1">{cliente.nome}</h3>
         <p className="text-gray-300 text-sm">{cliente.telefone}</p>
-        {cliente.whatsapp && <span className="text-green-400 text-xs">(WhatsApp)</span>}
+        {cliente.whatsapp && (
+          <span className="text-green-400 text-xs">(WhatsApp)</span>
+        )}
         <ul className="mt-2 text-sm list-disc list-inside text-gray-300">
           {cliente.motos.map((m, i) => (
             <li key={i}>
@@ -196,12 +218,14 @@ function FormularioCliente({
   onSalvar,
   onCancelar,
   inputClass,
+  onVoltar,
 }: {
   cliente: Cliente;
   setCliente: React.Dispatch<React.SetStateAction<Cliente>>;
   onSalvar: () => void;
   onCancelar: () => void;
   inputClass: string;
+  onVoltar: () => void;
 }) {
   const handleChange = <K extends keyof Cliente>(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -244,6 +268,9 @@ function FormularioCliente({
             value={cliente.nome}
             onChange={(e) => handleChange(e, "nome")}
             className={inputClass}
+            spellCheck={false}
+            autoComplete="off"
+            style={{ WebkitTextFillColor: 'white' }}
           />
         </div>
 
@@ -255,6 +282,9 @@ function FormularioCliente({
             value={cliente.telefone}
             onChange={(e) => handleChange(e, "telefone")}
             className={inputClass}
+            spellCheck={false}
+            autoComplete="off"
+            style={{ WebkitTextFillColor: 'white' }}
           />
           <div className="flex items-center mt-2 space-x-2">
             <Switch
@@ -274,6 +304,9 @@ function FormularioCliente({
             value={cliente.cpf}
             onChange={(e) => handleChange(e, "cpf")}
             className={inputClass}
+            spellCheck={false}
+            autoComplete="off"
+            style={{ WebkitTextFillColor: 'white' }}
           />
         </div>
 
@@ -284,6 +317,9 @@ function FormularioCliente({
             value={cliente.endereco}
             onChange={(e) => handleChange(e, "endereco")}
             className={inputClass}
+            spellCheck={false}
+            autoComplete="off"
+            style={{ WebkitTextFillColor: 'white' }}
           />
         </div>
 
@@ -301,30 +337,45 @@ function FormularioCliente({
                 value={moto.placa}
                 onChange={(e) => handleMotoChange(e, "placa", index)}
                 className={inputClass}
+                spellCheck={false}
+                autoComplete="off"
+                style={{ WebkitTextFillColor: 'white' }}
               />
               <Input
                 placeholder="Modelo (Ex: Honda CG 160)"
                 value={moto.modelo}
                 onChange={(e) => handleMotoChange(e, "modelo", index)}
                 className={inputClass}
+                spellCheck={false}
+                autoComplete="off"
+                style={{ WebkitTextFillColor: 'white' }}
               />
               <Input
                 placeholder="Ano (Ex: 2020)"
                 value={moto.ano}
                 onChange={(e) => handleMotoChange(e, "ano", index)}
                 className={inputClass}
+                spellCheck={false}
+                autoComplete="off"
+                style={{ WebkitTextFillColor: 'white' }}
               />
               <Input
                 placeholder="Cor (Ex: Vermelha)"
                 value={moto.cor}
                 onChange={(e) => handleMotoChange(e, "cor", index)}
                 className={inputClass}
+                spellCheck={false}
+                autoComplete="off"
+                style={{ WebkitTextFillColor: 'white' }}
               />
               <Input
                 placeholder="Chassi (Ex: 9C2KC1670ER000001)"
                 value={moto.chassi}
                 onChange={(e) => handleMotoChange(e, "chassi", index)}
                 className={inputClass + " sm:col-span-2"}
+                spellCheck={false}
+                autoComplete="off"
+                style={{ WebkitTextFillColor: 'white' }}
               />
             </div>
           ))}
@@ -334,17 +385,10 @@ function FormularioCliente({
           </Button>
         </div>
 
-        <div>
-          <Label>Observações</Label>
-          <Textarea
-            placeholder="Observações adicionais sobre o cliente ou serviço..."
-            value={cliente.observacoes}
-            onChange={(e) => handleChange(e, "observacoes")}
-            className={inputClass}
-          />
-        </div>
-
         <div className="flex justify-end space-x-4 pt-6">
+          <Button variant="outline" onClick={onVoltar}>
+            ← Voltar
+          </Button>
           <Button onClick={onSalvar} className="bg-green-600 hover:bg-green-700">
             Salvar Cliente
           </Button>

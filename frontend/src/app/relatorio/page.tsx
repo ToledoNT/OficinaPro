@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation'; // import para navegação
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Button } from '../components/ui/button';
@@ -16,6 +17,7 @@ interface RelatorioItem {
 }
 
 export default function Relatorios() {
+  const router = useRouter(); // hook de navegação
   const [filtroCliente, setFiltroCliente] = useState('');
   const [filtroPago, setFiltroPago] = useState<'todos' | 'sim' | 'nao'>('todos');
 
@@ -37,6 +39,17 @@ export default function Relatorios() {
     <div className="min-h-screen w-full bg-[#0f172a] text-white p-6">
       {/* Container centralizado com largura máxima */}
       <div className="max-w-4xl mx-auto">
+        {/* Botão Voltar para Início */}
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => router.push('/')}
+            className="border border-gray-500 text-gray-200 hover:bg-gray-700"
+          >
+            ← Voltar para Início
+          </Button>
+        </div>
+
         <h1 className="text-3xl font-bold mb-8 text-cyan-400 text-center">Relatórios</h1>
 
         <Card>
