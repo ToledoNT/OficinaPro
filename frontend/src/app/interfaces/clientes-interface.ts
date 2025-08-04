@@ -15,5 +15,4 @@ export interface Moto {
     endereco: string;
     observacoes: string;
     motos: Moto[];
-  }
-  
+  } 
