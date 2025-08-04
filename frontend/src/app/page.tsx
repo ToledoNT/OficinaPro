@@ -55,7 +55,7 @@ export default function Home() {
           color="from-rose-500 to-pink-600"
         />
         <ModuleButton
-          href="/relatorios"
+          href="/relatorio"
           icon="📊"
           title="Relatórios"
           color="from-amber-400 to-orange-500"

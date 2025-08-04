@@ -1,34 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // import para navegação
+import { useRouter } from 'next/navigation'; 
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
-
-interface RelatorioItem {
-  id: number;
-  cliente: string;
-  servico: string;
-  data: string;
-  valor: number;
-  pago: boolean;
-}
+import { RelatorioItem } from '../interfaces/relatorio-interface';
 
 export default function Relatorios() {
-  const router = useRouter(); // hook de navegação
+  const router = useRouter(); 
   const [filtroCliente, setFiltroCliente] = useState('');
   const [filtroPago, setFiltroPago] = useState<'todos' | 'sim' | 'nao'>('todos');
 
-  // Dados fictícios para exemplo
   const relatoriosData: RelatorioItem[] = [
     { id: 1, cliente: 'João Silva', servico: 'Troca de óleo', data: '2025-07-01', valor: 150, pago: true },
     { id: 2, cliente: 'Maria Souza', servico: 'Revisão geral', data: '2025-07-10', valor: 300, pago: false },
     { id: 3, cliente: 'Carlos Pereira', servico: 'Conserto freios', data: '2025-07-15', valor: 200, pago: true },
   ];
 
-  // Filtra dados pelo cliente e status pagamento
   const relatoriosFiltrados = relatoriosData.filter(item => {
     const clienteMatch = item.cliente.toLowerCase().includes(filtroCliente.toLowerCase());
     const pagoMatch = filtroPago === 'todos' || (filtroPago === 'sim' ? item.pago : !item.pago);

@@ -1,23 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Import do useRouter para navegação
+import { useRouter } from 'next/navigation';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Switch } from '../components/ui/switch';
 import { Card, CardContent } from '../components/ui/card';
-
-interface Servico {
-  id: number;
-  cliente: string;
-  data: string;
-  descricao: string;
-  finalizado: boolean;
-  status: string;
-  observacoes: string;
-}
+import { Servico } from '../interfaces/service-interface';
 
 type ViewMode = 'ver' | 'cadastrar';
 
@@ -33,7 +24,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function ServicosPage() {
-  const router = useRouter(); // Hook de navegação
+  const router = useRouter(); 
   const [viewMode, setViewMode] = useState<ViewMode>('ver');
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [servicoAtual, setServicoAtual] = useState<Servico>(criarServicoVazio());
