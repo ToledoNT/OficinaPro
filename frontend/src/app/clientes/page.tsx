@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from "react";
-import { useRouter } from 'next/navigation';  
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import { Card, CardContent } from "../components/ui/card";
-import { Cliente, Moto } from "../interfaces/clientes-interface";
+import { Cliente, Veiculo, Endereco } from "../interfaces/clientes-interface";
+import { ApiService } from "@/api/api-requests";
+import { ApiResponseCliente } from "../interfaces/response-interface";
 
 type ViewMode = "ver" | "cadastrar" | "editar";
 
@@ -18,57 +20,144 @@ export default function Clientes() {
   const [clienteAtual, setClienteAtual] = useState<Cliente>(criarClienteVazio());
   const [filtro, setFiltro] = useState("");
 
+  useEffect(() => {
+    async function carregarClientes() {
+      try {
+        const api = new ApiService();
+        const lista = await api.getClientes();
+
+        const clientesNormalizados = lista.map((cliente) => ({
+          ...cliente,
+          veiculos: Array.isArray(cliente.veiculos) ? cliente.veiculos : [],
+          endereco: {
+            rua: cliente.endereco?.rua || "",
+            numero: cliente.endereco?.numero || "",
+            bairro: cliente.endereco?.bairro || "",
+            cidade: cliente.endereco?.cidade || "",
+            estado: cliente.endereco?.estado || "",
+            cep: cliente.endereco?.cep || "",
+          },
+        }));
+
+        console.log("LISTA normalizada:", clientesNormalizados);
+        setClientes(clientesNormalizados);
+      } catch (error) {
+        console.error("Erro ao carregar clientes:", error);
+      }
+    }
+
+    carregarClientes();
+  }, []);
+
   function criarClienteVazio(): Cliente {
     return {
-      id: Date.now(),
+      id: 0,
       nome: "",
       telefone: "",
       whatsapp: false,
       cpf: "",
-      endereco: "",
+      endereco: {
+        rua: "",
+        numero: "",
+        bairro: "",
+        cidade: "",
+        estado: "",
+        cep: "",
+      },
       observacoes: "",
-      motos: [{ placa: "", modelo: "", ano: "", cor: "", chassi: "" }],
+      veiculos: [{ placa: "", modelo: "", ano: "", cor: "", chassi: "" }],
     };
   }
 
-  function salvarCliente() {
+  async function salvarCliente() {
     if (!clienteAtual.nome.trim()) {
       alert("O nome do cliente é obrigatório.");
       return;
     }
 
-    if (viewMode === "cadastrar") {
-      setClientes((prev) => [...prev, clienteAtual]);
-      alert("Cliente registrado!");
-    } else {
-      setClientes((prev) =>
-        prev.map((c) => (c.id === clienteAtual.id ? clienteAtual : c))
-      );
-      alert("Cliente atualizado!");
-    }
+    const clienteParaEnviar = {
+      nome: clienteAtual.nome,
+      telefone: clienteAtual.telefone,
+      whatsapp: clienteAtual.whatsapp,
+      cpf: clienteAtual.cpf,
+      endereco: clienteAtual.endereco,
+      observacoes: clienteAtual.observacoes,
+      veiculos: clienteAtual.veiculos,
+    };
 
-    setClienteAtual(criarClienteVazio());
-    setViewMode("ver");
+    const api = new ApiService();
+
+    try {
+      let result: ApiResponseCliente;
+      if (viewMode === "cadastrar") {
+        result = await api.registerCliente(clienteParaEnviar);
+      } else if (viewMode === "editar") {
+        result = await api.updateCliente(clienteAtual.id, clienteParaEnviar);
+      } else {
+        throw new Error("Modo inválido");
+      }
+
+      console.log("Resposta da API:", result);
+
+      if (result.status) {
+        if (result.data) {
+          alert(
+            viewMode === "cadastrar"
+              ? "Cliente registrado com sucesso!"
+              : "Cliente atualizado com sucesso!"
+          );
+
+          if (viewMode === "cadastrar") {
+            setClientes((prev) => [...prev, result.data!]);
+          } else if (viewMode === "editar") {
+            setClientes((prev) =>
+              prev.map((c) => (c.id === result.data!.id ? result.data! : c))
+            );
+          }
+
+          setClienteAtual(criarClienteVazio());
+          setViewMode("ver");
+        } else {
+          console.error("API retornou sucesso, mas sem dados do cliente:", result);
+          alert("Erro: A resposta da API não retornou os dados do cliente.");
+        }
+      } else {
+        console.error("Erro na operação, resposta da API:", result);
+        alert(`Erro: ${result.message || "Não foi possível salvar o cliente."}`);
+      }
+    } catch (error) {
+      console.error("Erro ao salvar cliente:", error);
+      alert("Erro ao salvar cliente.");
+    }
   }
 
-  const deletarCliente = (id: number) => {
+  const deletarCliente = async (id: number) => {
     if (confirm("Deseja realmente deletar este cliente?")) {
-      setClientes((prev) => prev.filter((c) => c.id !== id));
+      try {
+        const api = new ApiService();
+        const result = await api.deleteCliente(id);
+        if (result) {
+          setClientes((prev) => prev.filter((c) => c.id !== id));
+        } else {
+          alert(`Erro ao deletar cliente: ${result || ""}`);
+        }
+      } catch (error) {
+        alert("Erro ao deletar cliente.");
+        console.error(error);
+      }
     }
   };
 
-  const clientesFiltrados = clientes.filter((c) =>
-    c.nome.toLowerCase().includes(filtro.toLowerCase())
+  const clientesFiltrados = (clientes ?? []).filter((c) =>
+    (c.nome ?? "").toLowerCase().includes(filtro.toLowerCase())
   );
 
-  // Classe CSS para inputs - fundo escuro e texto branco para melhor contraste no mobile
   const inputClass =
     "bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
       <div className="max-w-6xl mx-auto">
-        {/* Botão Voltar na tela de cadastro/edição */}
         {(viewMode === "cadastrar" || viewMode === "editar") && (
           <div className="mb-6">
             <Button
@@ -84,70 +173,64 @@ export default function Clientes() {
           </div>
         )}
 
-        {/* Botões principais (ver, cadastrar, voltar para início) */}
         {viewMode === "ver" && (
-          <div className="flex flex-wrap items-center gap-4 mb-4">
-            <Button
-              onClick={() => setViewMode("ver")}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Ver Clientes
-            </Button>
-            <Button
-              onClick={() => {
-                setClienteAtual(criarClienteVazio());
-                setViewMode("cadastrar");
-              }}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              Cadastrar Cliente
-            </Button>
-            <Button
-              variant="outline"
-              className="border border-gray-500 text-gray-200 hover:bg-gray-700"
-              onClick={() => router.push('/')}
-            >
-              ← Voltar para Início
-            </Button>
-          </div>
+          <>
+            <div className="flex flex-wrap items-center gap-4 mb-4">
+              <Button
+                onClick={() => setViewMode("ver")}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Ver Clientes
+              </Button>
+              <Button
+                onClick={() => {
+                  setClienteAtual(criarClienteVazio());
+                  setViewMode("cadastrar");
+                }}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Cadastrar Cliente
+              </Button>
+              <Button
+                variant="outline"
+                className="border border-gray-500 text-gray-200 hover:bg-gray-700"
+                onClick={() => router.push("/")}
+              >
+                ← Voltar para Início
+              </Button>
+            </div>
+
+            <div className="mb-10">
+              <Input
+                value={filtro}
+                onChange={(e) => setFiltro(e.target.value)}
+                placeholder="Buscar cliente por nome..."
+                className={inputClass + " max-w-sm"}
+                spellCheck={false}
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {clientesFiltrados.length === 0 ? (
+                <p>Nenhum cliente encontrado.</p>
+              ) : (
+                clientesFiltrados.map((c) => (
+                  <ClienteCard
+                    key={c.id}
+                    cliente={c}
+                    onEditar={() => {
+                      setClienteAtual(c);
+                      setViewMode("editar");
+                    }}
+                    onDeletar={() => deletarCliente(c.id)}
+                  />
+                ))
+              )}
+            </div>
+          </>
         )}
 
-        {/* Campo de busca */}
-        {viewMode === "ver" && (
-          <div className="mb-10">
-            <Input
-              value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
-              placeholder="Buscar cliente por nome..."
-              className={inputClass + " max-w-sm"}
-              spellCheck={false}
-              autoComplete="off"
-            />
-          </div>
-        )}
-
-        {/* Listagem de clientes */}
-        {viewMode === "ver" && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {clientesFiltrados.length === 0 ? (
-              <p>Nenhum cliente encontrado.</p>
-            ) : (
-              clientesFiltrados.map((c) => (
-                <ClienteCard
-                  key={c.id}
-                  cliente={c}
-                  onEditar={() => {
-                    setClienteAtual(c);
-                    setViewMode("editar");
-                  }}
-                  onDeletar={() => deletarCliente(c.id)}
-                />
-              ))
-            )}
-          </div>
-        )}
-
-        {/* Formulário de cadastro/edição */}
         {(viewMode === "cadastrar" || viewMode === "editar") && (
           <FormularioCliente
             cliente={clienteAtual}
@@ -162,6 +245,7 @@ export default function Clientes() {
               setClienteAtual(criarClienteVazio());
               setViewMode("ver");
             }}
+            viewMode={viewMode}
           />
         )}
       </div>
@@ -169,29 +253,19 @@ export default function Clientes() {
   );
 }
 
-// ==================== COMPONENTES ======================
+function ClienteCard({ cliente, onEditar, onDeletar }: { cliente: Cliente; onEditar: () => void; onDeletar: () => void }) {
+  const veiculos = cliente.veiculos ?? []; // garante array
 
-function ClienteCard({
-  cliente,
-  onEditar,
-  onDeletar,
-}: {
-  cliente: Cliente;
-  onEditar: () => void;
-  onDeletar: () => void;
-}) {
   return (
     <Card className="bg-[#1e293b] border border-gray-700">
       <CardContent className="p-4">
         <h3 className="text-lg font-bold mb-1">{cliente.nome}</h3>
         <p className="text-gray-300 text-sm">{cliente.telefone}</p>
-        {cliente.whatsapp && (
-          <span className="text-green-400 text-xs">(WhatsApp)</span>
-        )}
+        {cliente.whatsapp && <span className="text-green-400 text-xs">(WhatsApp)</span>}
         <ul className="mt-2 text-sm list-disc list-inside text-gray-300">
-          {cliente.motos.map((m, i) => (
+          {veiculos.map((v, i) => (
             <li key={i}>
-              {m.modelo} ({m.placa})
+              {v.modelo} ({v.placa})
             </li>
           ))}
         </ul>
@@ -212,6 +286,7 @@ function ClienteCard({
   );
 }
 
+
 function FormularioCliente({
   cliente,
   setCliente,
@@ -219,6 +294,7 @@ function FormularioCliente({
   onCancelar,
   inputClass,
   onVoltar,
+  viewMode,
 }: {
   cliente: Cliente;
   setCliente: React.Dispatch<React.SetStateAction<Cliente>>;
@@ -226,6 +302,7 @@ function FormularioCliente({
   onCancelar: () => void;
   inputClass: string;
   onVoltar: () => void;
+  viewMode: ViewMode;
 }) {
   const handleChange = <K extends keyof Cliente>(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -234,22 +311,35 @@ function FormularioCliente({
     setCliente((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  const handleMotoChange = <K extends keyof Moto>(
+  const handleEnderecoChange = <K extends keyof Endereco>(
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: K
+  ) => {
+    setCliente((prev) => ({
+      ...prev,
+      endereco: {
+        ...prev.endereco,
+        [field]: e.target.value,
+      },
+    }));
+  };
+
+  const handleVeiculoChange = <K extends keyof Veiculo>(
     e: React.ChangeEvent<HTMLInputElement>,
     field: K,
     index: number
   ) => {
     setCliente((prev) => {
-      const novasMotos = [...prev.motos];
-      novasMotos[index] = { ...novasMotos[index], [field]: e.target.value };
-      return { ...prev, motos: novasMotos };
+      const novosVeiculos = [...prev.veiculos];
+      novosVeiculos[index] = { ...novosVeiculos[index], [field]: e.target.value };
+      return { ...prev, veiculos: novosVeiculos };
     });
   };
 
-  const addMoto = () => {
+  const addVeiculo = () => {
     setCliente((prev) => ({
       ...prev,
-      motos: [...prev.motos, { placa: "", modelo: "", ano: "", cor: "", chassi: "" }],
+      veiculos: [...prev.veiculos, { placa: "", modelo: "", ano: "", cor: "", chassi: "" }],
     }));
   };
 
@@ -257,7 +347,7 @@ function FormularioCliente({
     <Card className="bg-[#1e293b] p-6 border border-gray-700 max-w-3xl mx-auto">
       <CardContent className="space-y-6">
         <h2 className="text-2xl font-semibold">
-          {cliente.id ? "Editar Cliente" : "Cadastrar Novo Cliente"}
+          {viewMode === "editar" ? "Editar Cliente" : "Cadastrar Novo Cliente"}
         </h2>
 
         <div>
@@ -270,7 +360,7 @@ function FormularioCliente({
             className={inputClass}
             spellCheck={false}
             autoComplete="off"
-            style={{ WebkitTextFillColor: 'white' }}
+            style={{ WebkitTextFillColor: "white" }}
           />
         </div>
 
@@ -284,7 +374,7 @@ function FormularioCliente({
             className={inputClass}
             spellCheck={false}
             autoComplete="off"
-            style={{ WebkitTextFillColor: 'white' }}
+            style={{ WebkitTextFillColor: "white" }}
           />
           <div className="flex items-center mt-2 space-x-2">
             <Switch
@@ -306,82 +396,155 @@ function FormularioCliente({
             className={inputClass}
             spellCheck={false}
             autoComplete="off"
-            style={{ WebkitTextFillColor: 'white' }}
+            style={{ WebkitTextFillColor: "white" }}
+          />
+        </div>
+
+        {/* Campos de endereço */}
+        <div>
+          <Label>Rua</Label>
+          <Input
+            value={cliente.endereco.rua}
+            onChange={(e) => handleEnderecoChange(e, "rua")}
+            className={inputClass}
+            spellCheck={false}
+            autoComplete="off"
+            style={{ WebkitTextFillColor: "white" }}
           />
         </div>
 
         <div>
-          <Label>Endereço completo</Label>
+          <Label>Número</Label>
           <Input
-            placeholder="Rua, número, bairro, cidade"
-            value={cliente.endereco}
-            onChange={(e) => handleChange(e, "endereco")}
+            value={cliente.endereco.numero}
+            onChange={(e) => handleEnderecoChange(e, "numero")}
             className={inputClass}
             spellCheck={false}
             autoComplete="off"
-            style={{ WebkitTextFillColor: 'white' }}
+            style={{ WebkitTextFillColor: "white" }}
+          />
+        </div>
+
+        <div>
+          <Label>Bairro</Label>
+          <Input
+            value={cliente.endereco.bairro}
+            onChange={(e) => handleEnderecoChange(e, "bairro")}
+            className={inputClass}
+            spellCheck={false}
+            autoComplete="off"
+            style={{ WebkitTextFillColor: "white" }}
+          />
+        </div>
+
+        <div>
+          <Label>Cidade</Label>
+          <Input
+            value={cliente.endereco.cidade}
+            onChange={(e) => handleEnderecoChange(e, "cidade")}
+            className={inputClass}
+            spellCheck={false}
+            autoComplete="off"
+            style={{ WebkitTextFillColor: "white" }}
+          />
+        </div>
+
+        <div>
+          <Label>Estado</Label>
+          <Input
+            value={cliente.endereco.estado}
+            onChange={(e) => handleEnderecoChange(e, "estado")}
+            className={inputClass}
+            spellCheck={false}
+            autoComplete="off"
+            style={{ WebkitTextFillColor: "white" }}
+          />
+        </div>
+
+        <div>
+          <Label>CEP</Label>
+          <Input
+            value={cliente.endereco.cep}
+            onChange={(e) => handleEnderecoChange(e, "cep")}
+            className={inputClass}
+            spellCheck={false}
+            autoComplete="off"
+            style={{ WebkitTextFillColor: "white" }}
+          />
+        </div>
+
+        <div>
+          <Label>Observações</Label>
+          <Input
+            placeholder="Observações"
+            value={cliente.observacoes}
+            onChange={(e) => handleChange(e, "observacoes")}
+            className={inputClass}
+            spellCheck={false}
+            autoComplete="off"
+            style={{ WebkitTextFillColor: "white" }}
           />
         </div>
 
         <div className="space-y-6">
-          <h3 className="text-lg font-semibold mt-6">Informações da(s) Moto(s)</h3>
+          <h3 className="text-lg font-semibold mt-6">Informações do Veículo</h3>
 
-          {cliente.motos.map((moto, index) => (
+          {cliente.veiculos.map((veiculo, index) => (
             <div
               key={index}
               className="border-t border-gray-600 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4"
             >
-              <Label className="col-span-full font-medium">Moto {index + 1}</Label>
+              <Label className="col-span-full font-medium">Veículo {index + 1}</Label>
               <Input
                 placeholder="Placa (Ex: ABC-1234)"
-                value={moto.placa}
-                onChange={(e) => handleMotoChange(e, "placa", index)}
+                value={veiculo.placa}
+                onChange={(e) => handleVeiculoChange(e, "placa", index)}
                 className={inputClass}
                 spellCheck={false}
                 autoComplete="off"
-                style={{ WebkitTextFillColor: 'white' }}
+                style={{ WebkitTextFillColor: "white" }}
               />
               <Input
                 placeholder="Modelo (Ex: Honda CG 160)"
-                value={moto.modelo}
-                onChange={(e) => handleMotoChange(e, "modelo", index)}
+                value={veiculo.modelo}
+                onChange={(e) => handleVeiculoChange(e, "modelo", index)}
                 className={inputClass}
                 spellCheck={false}
                 autoComplete="off"
-                style={{ WebkitTextFillColor: 'white' }}
+                style={{ WebkitTextFillColor: "white" }}
               />
               <Input
                 placeholder="Ano (Ex: 2020)"
-                value={moto.ano}
-                onChange={(e) => handleMotoChange(e, "ano", index)}
+                value={veiculo.ano}
+                onChange={(e) => handleVeiculoChange(e, "ano", index)}
                 className={inputClass}
                 spellCheck={false}
                 autoComplete="off"
-                style={{ WebkitTextFillColor: 'white' }}
+                style={{ WebkitTextFillColor: "white" }}
               />
               <Input
                 placeholder="Cor (Ex: Vermelha)"
-                value={moto.cor}
-                onChange={(e) => handleMotoChange(e, "cor", index)}
+                value={veiculo.cor}
+                onChange={(e) => handleVeiculoChange(e, "cor", index)}
                 className={inputClass}
                 spellCheck={false}
                 autoComplete="off"
-                style={{ WebkitTextFillColor: 'white' }}
+                style={{ WebkitTextFillColor: "white" }}
               />
               <Input
                 placeholder="Chassi (Ex: 9C2KC1670ER000001)"
-                value={moto.chassi}
-                onChange={(e) => handleMotoChange(e, "chassi", index)}
+                value={veiculo.chassi}
+                onChange={(e) => handleVeiculoChange(e, "chassi", index)}
                 className={inputClass + " sm:col-span-2"}
                 spellCheck={false}
                 autoComplete="off"
-                style={{ WebkitTextFillColor: 'white' }}
+                style={{ WebkitTextFillColor: "white" }}
               />
             </div>
           ))}
 
-          <Button onClick={addMoto} className="w-full bg-gray-600 hover:bg-gray-700">
-            + Adicionar Moto
+          <Button onClick={addVeiculo} className="w-full bg-gray-600 hover:bg-gray-700">
+            + Adicionar Veículo
           </Button>
         </div>
 

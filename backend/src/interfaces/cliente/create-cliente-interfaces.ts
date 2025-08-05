@@ -1,9 +1,18 @@
 export interface ICreateClient {
-    id?: string;
-    nome: string;
-    telefone: string;
-    whatsapp: string;
-    cpf: string;
-    endereco: string;
-    observacoes: string;
+  id?: string;
+  nome: string;
+  telefone: string;
+  isWhatsapp: boolean;
+  cpf: string;
+  email?: string;
+  endereco: {
+    rua: string;
+    numero: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    cep: string;
+  };
+  observacoes: string;
+  dataCadastro?: Date;
 }
