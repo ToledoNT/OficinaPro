@@ -18,6 +18,7 @@ export default function Clientes() {
   const [viewMode, setViewMode] = useState<ViewMode>("ver");
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [clienteAtual, setClienteAtual] = useState<Cliente>(criarClienteVazio());
+  const [clienteVisualizar, setClienteVisualizar] = useState<Cliente | null>(null);
   const [filtro, setFiltro] = useState("");
 
   useEffect(() => {
@@ -25,7 +26,6 @@ export default function Clientes() {
       try {
         const api = new ApiService();
         const lista = await api.getClientes();
-
         const clientesNormalizados = lista.map((cliente) => ({
           ...cliente,
           veiculos: Array.isArray(cliente.veiculos) ? cliente.veiculos : [],
@@ -38,14 +38,11 @@ export default function Clientes() {
             cep: cliente.endereco?.cep || "",
           },
         }));
-
-        console.log("LISTA normalizada:", clientesNormalizados);
         setClientes(clientesNormalizados);
       } catch (error) {
         console.error("Erro ao carregar clientes:", error);
       }
     }
-
     carregarClientes();
   }, []);
 
@@ -74,7 +71,6 @@ export default function Clientes() {
       alert("O nome do cliente é obrigatório.");
       return;
     }
-
     const clienteParaEnviar = {
       nome: clienteAtual.nome,
       telefone: clienteAtual.telefone,
@@ -84,45 +80,23 @@ export default function Clientes() {
       observacoes: clienteAtual.observacoes,
       veiculos: clienteAtual.veiculos,
     };
-
     const api = new ApiService();
-
     try {
       let result: ApiResponseCliente;
-      if (viewMode === "cadastrar") {
-        result = await api.registerCliente(clienteParaEnviar);
-      } else if (viewMode === "editar") {
-        result = await api.updateCliente(clienteAtual.id, clienteParaEnviar);
+      if (viewMode === "cadastrar") result = await api.registerCliente(clienteParaEnviar);
+      else if (viewMode === "editar") result = await api.updateCliente(clienteAtual.id, clienteParaEnviar);
+      else throw new Error("Modo inválido");
+
+      if (result.status && result.data) {
+        alert(viewMode === "cadastrar" ? "Cliente registrado com sucesso!" : "Cliente atualizado com sucesso!");
+        setClientes(prev =>
+          viewMode === "cadastrar"
+            ? [...prev, result.data!]
+            : prev.map(c => c.id === result.data!.id ? result.data! : c)
+        );
+        setClienteAtual(criarClienteVazio());
+        setViewMode("ver");
       } else {
-        throw new Error("Modo inválido");
-      }
-
-      console.log("Resposta da API:", result);
-
-      if (result.status) {
-        if (result.data) {
-          alert(
-            viewMode === "cadastrar"
-              ? "Cliente registrado com sucesso!"
-              : "Cliente atualizado com sucesso!"
-          );
-
-          if (viewMode === "cadastrar") {
-            setClientes((prev) => [...prev, result.data!]);
-          } else if (viewMode === "editar") {
-            setClientes((prev) =>
-              prev.map((c) => (c.id === result.data!.id ? result.data! : c))
-            );
-          }
-
-          setClienteAtual(criarClienteVazio());
-          setViewMode("ver");
-        } else {
-          console.error("API retornou sucesso, mas sem dados do cliente:", result);
-          alert("Erro: A resposta da API não retornou os dados do cliente.");
-        }
-      } else {
-        console.error("Erro na operação, resposta da API:", result);
         alert(`Erro: ${result.message || "Não foi possível salvar o cliente."}`);
       }
     } catch (error) {
@@ -136,11 +110,9 @@ export default function Clientes() {
       try {
         const api = new ApiService();
         const result = await api.deleteCliente(id);
-        if (result) {
-          setClientes((prev) => prev.filter((c) => c.id !== id));
-        } else {
-          alert(`Erro ao deletar cliente: ${result || ""}`);
-        }
+        console.log(result);
+        if (result) setClientes(prev => prev.filter(c => c.id !== id));
+        else alert(`Erro ao deletar cliente: ${result || ""}`);
       } catch (error) {
         alert("Erro ao deletar cliente.");
         console.error(error);
@@ -148,26 +120,19 @@ export default function Clientes() {
     }
   };
 
-  const clientesFiltrados = (clientes ?? []).filter((c) =>
-    (c.nome ?? "").toLowerCase().includes(filtro.toLowerCase())
+  const clientesFiltrados = clientes.filter(c =>
+    c.nome?.toLowerCase().includes(filtro.toLowerCase())
   );
 
-  const inputClass =
-    "bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const inputClass = "bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
       <div className="max-w-6xl mx-auto">
-        {(viewMode === "cadastrar" || viewMode === "editar") && (
+        {(viewMode !== "ver") && (
           <div className="mb-6">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setClienteAtual(criarClienteVazio());
-                setViewMode("ver");
-              }}
-              className="border border-gray-500 text-gray-200 hover:bg-gray-700"
-            >
+            <Button variant="outline" onClick={() => { setClienteAtual(criarClienteVazio()); setViewMode("ver"); }}
+              className="border border-gray-500 text-gray-200 hover:bg-gray-700">
               ← Voltar
             </Button>
           </div>
@@ -176,85 +141,68 @@ export default function Clientes() {
         {viewMode === "ver" && (
           <>
             <div className="flex flex-wrap items-center gap-4 mb-4">
-              <Button
-                onClick={() => setViewMode("ver")}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Ver Clientes
-              </Button>
-              <Button
-                onClick={() => {
-                  setClienteAtual(criarClienteVazio());
-                  setViewMode("cadastrar");
-                }}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                Cadastrar Cliente
-              </Button>
-              <Button
-                variant="outline"
-                className="border border-gray-500 text-gray-200 hover:bg-gray-700"
-                onClick={() => router.push("/")}
-              >
-                ← Voltar para Início
-              </Button>
+              <Button onClick={() => setViewMode("ver")} className="bg-blue-600 hover:bg-blue-700">Ver Clientes</Button>
+              <Button onClick={() => { setClienteAtual(criarClienteVazio()); setViewMode("cadastrar"); }} className="bg-green-600 hover:bg-green-700">Cadastrar Cliente</Button>
+              <Button variant="outline" className="border border-gray-500 text-gray-200 hover:bg-gray-700" onClick={() => router.push("/")}>← Início</Button>
             </div>
 
             <div className="mb-10">
-              <Input
-                value={filtro}
-                onChange={(e) => setFiltro(e.target.value)}
-                placeholder="Buscar cliente por nome..."
-                className={inputClass + " max-w-sm"}
-                spellCheck={false}
-                autoComplete="off"
-              />
+              <Input value={filtro} onChange={e => setFiltro(e.target.value)} placeholder="Buscar cliente por nome..." className={inputClass + " max-w-sm"} spellCheck={false} autoComplete="off" />
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {clientesFiltrados.length === 0 ? (
-                <p>Nenhum cliente encontrado.</p>
-              ) : (
-                clientesFiltrados.map((c) => (
-                  <ClienteCard
-                    key={c.id}
-                    cliente={c}
-                    onEditar={() => {
-                      setClienteAtual(c);
-                      setViewMode("editar");
-                    }}
+              {clientesFiltrados.length === 0 ? <p>Nenhum cliente encontrado.</p> :
+                clientesFiltrados.map(c => (
+                  <ClienteCard key={c.id} cliente={c}
+                    onEditar={() => { setClienteAtual(c); setViewMode("editar"); }}
                     onDeletar={() => deletarCliente(c.id)}
+                    onVer={() => setClienteVisualizar(c)}
                   />
                 ))
-              )}
+              }
             </div>
           </>
         )}
 
         {(viewMode === "cadastrar" || viewMode === "editar") && (
-          <FormularioCliente
-            cliente={clienteAtual}
-            setCliente={setClienteAtual}
-            onSalvar={salvarCliente}
-            onCancelar={() => {
-              setClienteAtual(criarClienteVazio());
-              setViewMode("ver");
-            }}
-            inputClass={inputClass}
-            onVoltar={() => {
-              setClienteAtual(criarClienteVazio());
-              setViewMode("ver");
-            }}
-            viewMode={viewMode}
-          />
+          <FormularioCliente cliente={clienteAtual} setCliente={setClienteAtual}
+            onSalvar={salvarCliente} onCancelar={() => { setClienteAtual(criarClienteVazio()); setViewMode("ver"); }}
+            inputClass={inputClass} onVoltar={() => { setClienteAtual(criarClienteVazio()); setViewMode("ver"); }} viewMode={viewMode} />
+        )}
+
+        {clienteVisualizar && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+            <div className="bg-[#1e293b] text-white p-6 rounded-lg max-w-xl w-full border border-gray-600">
+              <h2 className="text-xl font-semibold mb-4">Dados do Cliente</h2>
+              <p><strong>Nome:</strong> {clienteVisualizar.nome}</p>
+              <p><strong>Telefone:</strong> {clienteVisualizar.telefone}</p>
+              <p><strong>WhatsApp:</strong> {clienteVisualizar.whatsapp ? "Sim" : "Não"}</p>
+              <p><strong>CPF:</strong> {clienteVisualizar.cpf}</p>
+              <p><strong>Endereço:</strong> {`${clienteVisualizar.endereco.rua}, ${clienteVisualizar.endereco.numero}, ${clienteVisualizar.endereco.bairro}, ${clienteVisualizar.endereco.cidade} - ${clienteVisualizar.endereco.estado}`}</p>
+              <p><strong>CEP:</strong> {clienteVisualizar.endereco.cep}</p>
+              <p><strong>Observações:</strong> {clienteVisualizar.observacoes}</p>
+              <p className="mt-4"><strong>Veículos:</strong></p>
+              {clienteVisualizar.veiculos.map((v, i) => (
+                <p key={i}>• {v.modelo} — {v.placa} ({v.ano}, {v.cor}, Chassi: {v.chassi})</p>
+              ))}
+              <div className="mt-6 flex justify-end">
+                <Button variant="outline" onClick={() => setClienteVisualizar(null)}>Fechar</Button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-function ClienteCard({ cliente, onEditar, onDeletar }: { cliente: Cliente; onEditar: () => void; onDeletar: () => void }) {
-  const veiculos = cliente.veiculos ?? []; // garante array
+function ClienteCard({ cliente, onEditar, onDeletar, onVer }: {
+  cliente: Cliente;
+  onEditar: () => void;
+  onDeletar: () => void;
+  onVer: () => void;
+}) {
+  const veiculos = cliente.veiculos ?? [];
 
   return (
     <Card className="bg-[#1e293b] border border-gray-700">
@@ -263,21 +211,16 @@ function ClienteCard({ cliente, onEditar, onDeletar }: { cliente: Cliente; onEdi
         <p className="text-gray-300 text-sm">{cliente.telefone}</p>
         {cliente.whatsapp && <span className="text-green-400 text-xs">(WhatsApp)</span>}
         <ul className="mt-2 text-sm list-disc list-inside text-gray-300">
-          {veiculos.map((v, i) => (
-            <li key={i}>
-              {v.modelo} ({v.placa})
-            </li>
-          ))}
+          {veiculos.map((v, i) => <li key={i}>{v.modelo} ({v.placa})</li>)}
         </ul>
         <div className="flex space-x-2 mt-4">
+          <Button onClick={onVer} variant="outline" className="text-sm px-3 border-gray-500 text-gray-300 hover:bg-gray-700">
+            Ver Dados
+          </Button>
           <Button onClick={onEditar} className="bg-blue-500 text-sm px-3">
             Editar
           </Button>
-          <Button
-            onClick={onDeletar}
-            variant="outline"
-            className="text-sm px-3 border-red-500 text-red-400 hover:bg-red-600 hover:text-white"
-          >
+          <Button onClick={onDeletar} variant="outline" className="text-sm px-3 border-red-500 text-red-400 hover:bg-red-600 hover:text-white">
             Deletar
           </Button>
         </div>

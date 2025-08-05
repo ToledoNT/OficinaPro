@@ -1,11 +1,13 @@
 import express, { Router } from "express";
-import { CreateClientController } from "../controller/clientes/create-client";
+import { CreateClientController } from "../controller/clientes/create-client-controller";
 import { GetAllClientsController } from "../controller/clientes/get-clientes-controller";
+import { DeleteClienteController } from "../controller/clientes/delete-client-controller";
 
 const router: Router = express.Router();
 
 const createUserController = new CreateClientController();
-const getAllUsersController = new GetAllClientsController();
+const getAllClientsController = new GetAllClientsController();
+const deleteClientController = new DeleteClienteController();
 
 
 
@@ -18,6 +20,14 @@ router.post(
 router.get(
   "/client/allclients", 
   // getUsersMiddleware.handle.bind(getUsersMiddleware),
-  getAllUsersController.handle.bind(getAllUsersController)
+  getAllClientsController.handle.bind(getAllClientsController)
 );
+
+router.delete(
+  "/client/deleteclient/:id", 
+  deleteClientController.handle.bind(deleteClientController)
+);
+
+
+
 export default router;
