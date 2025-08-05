@@ -50,12 +50,13 @@ export class ApiService {
 
   async deleteCliente(id: number): Promise<ApiResponseCliente> {
     try {
-      const response = await this.api.delete<ApiResponseCliente>(`/client/deletecliente/${id}`);
+      const response = await this.api.delete<ApiResponseCliente>(`/client/deleteclient/${id}`);
       return response.data;
     } catch (error) {
       return this.handleError(error, "Erro ao deletar usuário");
     }
   }
+  
 
   private handleError(error: unknown, defaultMessage: string): ApiResponseCliente {
     if (axios.isAxiosError(error)) {
