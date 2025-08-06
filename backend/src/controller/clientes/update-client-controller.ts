@@ -25,7 +25,6 @@ export class UpdateClienteController {
     }
 
     const updated = await new UpdateClient().execute(id, updateData);
-    console.log(updated);
     res.status(typeof updated.code === "number" ? updated.code : 200).send(updated);
   }
 }
