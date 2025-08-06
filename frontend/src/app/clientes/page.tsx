@@ -223,16 +223,58 @@ export default function Clientes() {
                 <p>Nenhum cliente encontrado.</p>
               ) : (
                 clientesFiltrados.map((cliente) => (
-                  <ClienteCard
+                  <Card
                     key={cliente.id}
-                    cliente={cliente}
-                    onEditar={() => {
-                      setClienteAtual(cliente);
-                      setViewMode("editar");
-                    }}
-                    onDeletar={() => deletarCliente(cliente.id)}
-                    onVer={() => setClienteVisualizar(cliente)}
-                  />
+                    className="bg-[#1e293b] border border-gray-700"
+                  >
+                    <CardContent className="p-4 text-gray-300">
+                      <h3 className="text-lg font-semibold mb-1 text-white">
+                        {cliente.nome}
+                      </h3>
+                      <p>{cliente.telefone}</p>
+                      {cliente.isWhatsapp && (
+                        <span className="text-green-400 text-xs">(WhatsApp)</span>
+                      )}
+
+                      <ul className="mt-2 text-sm list-disc list-inside">
+                        {(cliente.veiculos ?? []).length === 0 && (
+                          <li>Nenhum veículo cadastrado</li>
+                        )}
+                        {(cliente.veiculos ?? []).map((v, i) => (
+                          <li key={i}>
+                            {v.modelo} ({v.placa})
+                          </li>
+                        ))}
+                      </ul>
+
+                      {/* Botões agora ficam embaixo, alinhados em linha com espaçamento */}
+                      <div className="mt-4 flex justify-center gap-3">
+                        <Button
+                          variant="outline"
+                          className="text-yellow-400 border-yellow-400 hover:bg-yellow-600 hover:text-white text-xs px-3"
+                          onClick={() => setClienteVisualizar(cliente)}
+                        >
+                          Ver
+                        </Button>
+                        <Button
+                          className="bg-blue-500 text-xs px-3"
+                          onClick={() => {
+                            setClienteAtual(cliente);
+                            setViewMode("editar");
+                          }}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="text-red-500 border-red-500 hover:bg-red-600 hover:text-white text-xs px-3"
+                          onClick={() => deletarCliente(cliente.id)}
+                        >
+                          Deletar
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))
               )}
             </div>
@@ -315,60 +357,6 @@ function ModalCliente({
         </div>
       </div>
     </div>
-  );
-}
-
-function ClienteCard({
-  cliente,
-  onEditar,
-  onDeletar,
-  onVer,
-}: {
-  cliente: Cliente;
-  onEditar: () => void;
-  onDeletar: () => void;
-  onVer: () => void;
-}) {
-  const veiculos = cliente.veiculos ?? [];
-
-  return (
-    <Card className="bg-[#1e293b] border border-gray-700">
-      <CardContent className="p-4">
-        <h3 className="text-lg font-bold mb-1">{cliente.nome}</h3>
-        <p className="text-gray-300 text-sm">{cliente.telefone}</p>
-        {cliente.isWhatsapp && (
-          <span className="text-green-400 text-xs">(WhatsApp)</span>
-        )}
-        <ul className="mt-2 text-sm list-disc list-inside text-gray-300">
-          {veiculos.length === 0 && <li>Nenhum veículo cadastrado</li>}
-          {veiculos.map((v, i) => (
-            <li key={i}>
-              {v.modelo} ({v.placa})
-            </li>
-          ))}
-        </ul>
-
-        <div className="flex space-x-2 mt-4">
-          <Button
-            onClick={onVer}
-            variant="outline"
-            className="text-sm px-3 border-gray-500 text-gray-300 hover:bg-gray-700"
-          >
-            Ver Dados
-          </Button>
-          <Button onClick={onEditar} className="bg-blue-500 text-sm px-3">
-            Editar
-          </Button>
-          <Button
-            onClick={onDeletar}
-            variant="outline"
-            className="text-sm px-3 border-red-500 text-red-400 hover:bg-red-600 hover:text-white"
-          >
-            Deletar
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 

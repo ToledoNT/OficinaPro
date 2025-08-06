@@ -15,24 +15,13 @@ export class CreateClientController {
       return;
     }
 
-    try {
-      const createUserModel = new CreateClientModel(userData);
-      
-      const payload = createUserModel.toPayload() as ICreateClient;
+    const createUserModel = new CreateClientModel(userData);
+    const payload = createUserModel.toPayload() as ICreateClient;
+    const createdUser = await new CreateUser().execute(payload);
 
-      const createdUser = await new CreateUser().execute(payload);
+    const statusCode =
+      typeof createdUser?.code === "number" ? createdUser.code : 201;
 
-      const statusCode =
-        typeof createdUser?.code === "number" ? createdUser.code : 201;
-
-      res.status(statusCode).send(createdUser);
-    } catch (error) {
-      console.error("Erro ao criar cliente:", error);
-      res.status(500).send({
-        code: 500,
-        message: "Erro interno ao criar cliente",
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
+    res.status(statusCode).send(createdUser);
   }
 }
