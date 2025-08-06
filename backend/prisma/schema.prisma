@@ -8,15 +8,16 @@ datasource db {
 }
 
 model Cliente {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
   nome         String
   telefone     String
   isWhatsapp   Boolean
   cpf          String
-  email        String?  
+  email        String?
   endereco     Endereco
   observacoes  String
-  dataCadastro DateTime @default(now())
+  dataCadastro DateTime  @default(now())
+  veiculos     Veiculo[]  // array embutido de veículos
 }
 
 type Endereco {
@@ -26,6 +27,14 @@ type Endereco {
   cidade  String
   estado  String
   cep     String
+}
+
+type Veiculo {
+  placa  String
+  modelo String
+  ano    String
+  cor    String
+  chassi String
 }
 
 model Log {
