@@ -16,22 +16,33 @@ export interface Veiculo {
 }
 
 export interface Cliente {
-  id: number;
+  id: string;  
   nome: string;
   telefone: string;
-  whatsapp: boolean;
+  isWhatsapp: boolean;
   cpf: string;
   endereco: Endereco;
   observacoes: string;
   veiculos: Veiculo[];
 }
 
+
 export interface IRegisterClienteData {
   nome: string;
   telefone: string;
-  whatsapp: boolean;
+  isWhatsapp: boolean;
   cpf: string;
   endereco: Endereco;
   observacoes: string;
   veiculos: Veiculo[];
+}
+
+export interface IUpdateClienteData {
+  nome?: string;
+  telefone?: string;
+  isWhatsapp?: boolean;
+  cpf?: string;
+  endereco?: Partial<Endereco>;
+  observacoes?: string;
+  veiculos?: Veiculo[];
 }

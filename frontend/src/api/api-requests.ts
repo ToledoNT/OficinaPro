@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
-import { IRegisterClienteData, Cliente } from "@/app/interfaces/clientes-interface";
+import { IRegisterClienteData, Cliente, IUpdateClienteData } from "@/app/interfaces/clientes-interface";
 import { ApiResponseCliente, ApiResponseClientes } from "@/app/interfaces/response-interface";
 
 const apiBaseURL = "http://localhost:4001/api";
@@ -39,16 +39,18 @@ export class ApiService {
     }
   }
 
-  async updateCliente(id: number, data: IRegisterClienteData): Promise<ApiResponseCliente> {
+  async updateCliente(id: string | string, data: IUpdateClienteData): Promise<ApiResponseCliente> {
     try {
-      const response = await this.api.put<ApiResponseCliente>(`/client/updatecliente/${id}`, data);
+      console.log("updateCliente -> id:", id, "data:", data);
+      const response = await this.api.put<ApiResponseCliente>(`/client/updateclient/${id}`, data);
       return response.data;
     } catch (error) {
       return this.handleError(error, "Erro ao atualizar usuário");
     }
   }
+  
 
-  async deleteCliente(id: number): Promise<ApiResponseCliente> {
+  async deleteCliente(id: string): Promise<ApiResponseCliente> {
     try {
       const response = await this.api.delete<ApiResponseCliente>(`/client/deleteclient/${id}`);
       return response.data;

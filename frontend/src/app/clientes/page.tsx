@@ -1,20 +1,43 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import { Card, CardContent } from "../components/ui/card";
+
 import { Cliente, Veiculo, Endereco } from "../interfaces/clientes-interface";
 import { ApiService } from "@/api/api-requests";
 import { ApiResponseCliente } from "../interfaces/response-interface";
 
 type ViewMode = "ver" | "cadastrar" | "editar";
 
+function criarClienteVazio(): Cliente {
+  return {
+    id: "",
+    nome: "",
+    telefone: "",
+    isWhatsapp: false,
+    cpf: "",
+    endereco: {
+      rua: "",
+      numero: "",
+      bairro: "",
+      cidade: "",
+      estado: "",
+      cep: "",
+    },
+    observacoes: "",
+    veiculos: [],
+  };
+}
+
 export default function Clientes() {
   const router = useRouter();
+
   const [viewMode, setViewMode] = useState<ViewMode>("ver");
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [clienteAtual, setClienteAtual] = useState<Cliente>(criarClienteVazio());
@@ -22,78 +45,85 @@ export default function Clientes() {
   const [filtro, setFiltro] = useState("");
 
   useEffect(() => {
-    async function carregarClientes() {
+    const carregarClientes = async () => {
       try {
         const api = new ApiService();
         const lista = await api.getClientes();
+
         const clientesNormalizados = lista.map((cliente) => ({
           ...cliente,
           veiculos: Array.isArray(cliente.veiculos) ? cliente.veiculos : [],
           endereco: {
-            rua: cliente.endereco?.rua || "",
-            numero: cliente.endereco?.numero || "",
-            bairro: cliente.endereco?.bairro || "",
-            cidade: cliente.endereco?.cidade || "",
-            estado: cliente.endereco?.estado || "",
-            cep: cliente.endereco?.cep || "",
+            rua: cliente.endereco?.rua ?? "",
+            numero: cliente.endereco?.numero ?? "",
+            bairro: cliente.endereco?.bairro ?? "",
+            cidade: cliente.endereco?.cidade ?? "",
+            estado: cliente.endereco?.estado ?? "",
+            cep: cliente.endereco?.cep ?? "",
           },
         }));
+
         setClientes(clientesNormalizados);
       } catch (error) {
         console.error("Erro ao carregar clientes:", error);
       }
-    }
+    };
+
     carregarClientes();
   }, []);
 
-  function criarClienteVazio(): Cliente {
-    return {
-      id: 0,
-      nome: "",
-      telefone: "",
-      whatsapp: false,
-      cpf: "",
-      endereco: {
-        rua: "",
-        numero: "",
-        bairro: "",
-        cidade: "",
-        estado: "",
-        cep: "",
-      },
-      observacoes: "",
-      veiculos: [{ placa: "", modelo: "", ano: "", cor: "", chassi: "" }],
-    };
-  }
-
-  async function salvarCliente() {
+  const salvarCliente = async () => {
     if (!clienteAtual.nome.trim()) {
       alert("O nome do cliente é obrigatório.");
       return;
     }
+
+    // Filtra veículos removendo os que estiverem 100% vazios
+    const veiculosFiltrados = (clienteAtual.veiculos ?? []).filter(
+      (v) =>
+        (v.placa?.trim() ?? "") !== "" ||
+        (v.modelo?.trim() ?? "") !== "" ||
+        (v.ano?.trim() ?? "") !== "" ||
+        (v.cor?.trim() ?? "") !== "" ||
+        (v.chassi?.trim() ?? "") !== ""
+    );
+
     const clienteParaEnviar = {
       nome: clienteAtual.nome,
       telefone: clienteAtual.telefone,
-      whatsapp: clienteAtual.whatsapp,
+      isWhatsapp: clienteAtual.isWhatsapp,
       cpf: clienteAtual.cpf,
       endereco: clienteAtual.endereco,
       observacoes: clienteAtual.observacoes,
-      veiculos: clienteAtual.veiculos,
+      veiculos: veiculosFiltrados,
     };
+
     const api = new ApiService();
+
     try {
       let result: ApiResponseCliente;
-      if (viewMode === "cadastrar") result = await api.registerCliente(clienteParaEnviar);
-      else if (viewMode === "editar") result = await api.updateCliente(clienteAtual.id, clienteParaEnviar);
-      else throw new Error("Modo inválido");
+
+      if (viewMode === "cadastrar") {
+        result = await api.registerCliente(clienteParaEnviar);
+      } else if (viewMode === "editar") {
+        result = await api.updateCliente(clienteAtual.id, clienteParaEnviar);
+      } else {
+        throw new Error("Modo inválido");
+      }
 
       if (result.status && result.data) {
-        alert(viewMode === "cadastrar" ? "Cliente registrado com sucesso!" : "Cliente atualizado com sucesso!");
-        setClientes(prev =>
+        alert(
+          viewMode === "cadastrar"
+            ? "Cliente registrado com sucesso!"
+            : "Cliente atualizado com sucesso!"
+        );
+
+        setClientes((prev) =>
           viewMode === "cadastrar"
             ? [...prev, result.data!]
-            : prev.map(c => c.id === result.data!.id ? result.data! : c)
+            : prev.map((c) => (c.id === result.data!.id ? result.data! : c))
         );
+
         setClienteAtual(criarClienteVazio());
         setViewMode("ver");
       } else {
@@ -103,36 +133,46 @@ export default function Clientes() {
       console.error("Erro ao salvar cliente:", error);
       alert("Erro ao salvar cliente.");
     }
-  }
+  };
 
-  const deletarCliente = async (id: number) => {
-    if (confirm("Deseja realmente deletar este cliente?")) {
-      try {
-        const api = new ApiService();
-        const result = await api.deleteCliente(id);
-        console.log(result);
-        if (result) setClientes(prev => prev.filter(c => c.id !== id));
-        else alert(`Erro ao deletar cliente: ${result || ""}`);
-      } catch (error) {
-        alert("Erro ao deletar cliente.");
-        console.error(error);
+  const deletarCliente = async (id: string) => {
+    if (!confirm("Deseja realmente deletar este cliente?")) return;
+
+    try {
+      const api = new ApiService();
+      const result = await api.deleteCliente(id);
+
+      if (result) {
+        setClientes((prev) => prev.filter((c) => c.id !== id));
+      } else {
+        alert(`Erro ao deletar cliente: ${result || ""}`);
       }
+    } catch (error) {
+      console.error("Erro ao deletar cliente:", error);
+      alert("Erro ao deletar cliente.");
     }
   };
 
-  const clientesFiltrados = clientes.filter(c =>
-    c.nome?.toLowerCase().includes(filtro.toLowerCase())
+  const clientesFiltrados = clientes.filter((c) =>
+    c.nome.toLowerCase().includes(filtro.toLowerCase())
   );
 
-  const inputClass = "bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const inputClass =
+    "bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
       <div className="max-w-6xl mx-auto">
-        {(viewMode !== "ver") && (
+        {viewMode !== "ver" && (
           <div className="mb-6">
-            <Button variant="outline" onClick={() => { setClienteAtual(criarClienteVazio()); setViewMode("ver"); }}
-              className="border border-gray-500 text-gray-200 hover:bg-gray-700">
+            <Button
+              variant="outline"
+              className="border border-gray-500 text-gray-200 hover:bg-gray-700"
+              onClick={() => {
+                setClienteAtual(criarClienteVazio());
+                setViewMode("ver");
+              }}
+            >
               ← Voltar
             </Button>
           </div>
@@ -141,62 +181,149 @@ export default function Clientes() {
         {viewMode === "ver" && (
           <>
             <div className="flex flex-wrap items-center gap-4 mb-4">
-              <Button onClick={() => setViewMode("ver")} className="bg-blue-600 hover:bg-blue-700">Ver Clientes</Button>
-              <Button onClick={() => { setClienteAtual(criarClienteVazio()); setViewMode("cadastrar"); }} className="bg-green-600 hover:bg-green-700">Cadastrar Cliente</Button>
-              <Button variant="outline" className="border border-gray-500 text-gray-200 hover:bg-gray-700" onClick={() => router.push("/")}>← Início</Button>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => setViewMode("ver")}
+              >
+                Ver Clientes
+              </Button>
+
+              <Button
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  setClienteAtual(criarClienteVazio());
+                  setViewMode("cadastrar");
+                }}
+              >
+                Cadastrar Cliente
+              </Button>
+
+              <Button
+                variant="outline"
+                className="border border-gray-500 text-gray-200 hover:bg-gray-700"
+                onClick={() => router.push("/")}
+              >
+                ← Início
+              </Button>
             </div>
 
             <div className="mb-10">
-              <Input value={filtro} onChange={e => setFiltro(e.target.value)} placeholder="Buscar cliente por nome..." className={inputClass + " max-w-sm"} spellCheck={false} autoComplete="off" />
+              <Input
+                value={filtro}
+                onChange={(e) => setFiltro(e.target.value)}
+                placeholder="Buscar cliente por nome..."
+                className={`${inputClass} max-w-sm`}
+                spellCheck={false}
+                autoComplete="off"
+              />
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {clientesFiltrados.length === 0 ? <p>Nenhum cliente encontrado.</p> :
-                clientesFiltrados.map(c => (
-                  <ClienteCard key={c.id} cliente={c}
-                    onEditar={() => { setClienteAtual(c); setViewMode("editar"); }}
-                    onDeletar={() => deletarCliente(c.id)}
-                    onVer={() => setClienteVisualizar(c)}
+              {clientesFiltrados.length === 0 ? (
+                <p>Nenhum cliente encontrado.</p>
+              ) : (
+                clientesFiltrados.map((cliente) => (
+                  <ClienteCard
+                    key={cliente.id}
+                    cliente={cliente}
+                    onEditar={() => {
+                      setClienteAtual(cliente);
+                      setViewMode("editar");
+                    }}
+                    onDeletar={() => deletarCliente(cliente.id)}
+                    onVer={() => setClienteVisualizar(cliente)}
                   />
                 ))
-              }
+              )}
             </div>
           </>
         )}
 
         {(viewMode === "cadastrar" || viewMode === "editar") && (
-          <FormularioCliente cliente={clienteAtual} setCliente={setClienteAtual}
-            onSalvar={salvarCliente} onCancelar={() => { setClienteAtual(criarClienteVazio()); setViewMode("ver"); }}
-            inputClass={inputClass} onVoltar={() => { setClienteAtual(criarClienteVazio()); setViewMode("ver"); }} viewMode={viewMode} />
+          <FormularioCliente
+            cliente={clienteAtual}
+            setCliente={setClienteAtual}
+            onSalvar={salvarCliente}
+            onCancelar={() => {
+              setClienteAtual(criarClienteVazio());
+              setViewMode("ver");
+            }}
+            inputClass={inputClass}
+            viewMode={viewMode}
+          />
         )}
 
         {clienteVisualizar && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-            <div className="bg-[#1e293b] text-white p-6 rounded-lg max-w-xl w-full border border-gray-600">
-              <h2 className="text-xl font-semibold mb-4">Dados do Cliente</h2>
-              <p><strong>Nome:</strong> {clienteVisualizar.nome}</p>
-              <p><strong>Telefone:</strong> {clienteVisualizar.telefone}</p>
-              <p><strong>WhatsApp:</strong> {clienteVisualizar.whatsapp ? "Sim" : "Não"}</p>
-              <p><strong>CPF:</strong> {clienteVisualizar.cpf}</p>
-              <p><strong>Endereço:</strong> {`${clienteVisualizar.endereco.rua}, ${clienteVisualizar.endereco.numero}, ${clienteVisualizar.endereco.bairro}, ${clienteVisualizar.endereco.cidade} - ${clienteVisualizar.endereco.estado}`}</p>
-              <p><strong>CEP:</strong> {clienteVisualizar.endereco.cep}</p>
-              <p><strong>Observações:</strong> {clienteVisualizar.observacoes}</p>
-              <p className="mt-4"><strong>Veículos:</strong></p>
-              {clienteVisualizar.veiculos.map((v, i) => (
-                <p key={i}>• {v.modelo} — {v.placa} ({v.ano}, {v.cor}, Chassi: {v.chassi})</p>
-              ))}
-              <div className="mt-6 flex justify-end">
-                <Button variant="outline" onClick={() => setClienteVisualizar(null)}>Fechar</Button>
-              </div>
-            </div>
-          </div>
+          <ModalCliente
+            cliente={clienteVisualizar}
+            onFechar={() => setClienteVisualizar(null)}
+          />
         )}
       </div>
     </div>
   );
 }
 
-function ClienteCard({ cliente, onEditar, onDeletar, onVer }: {
+function ModalCliente({
+  cliente,
+  onFechar,
+}: {
+  cliente: Cliente;
+  onFechar: () => void;
+}) {
+  const veiculos = cliente.veiculos ?? [];
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+      <div className="bg-[#1e293b] text-white p-6 rounded-lg max-w-xl w-full border border-gray-600">
+        <h2 className="text-xl font-semibold mb-4">Dados do Cliente</h2>
+        <p>
+          <strong>Nome:</strong> {cliente.nome}
+        </p>
+        <p>
+          <strong>Telefone:</strong> {cliente.telefone}
+        </p>
+        <p>
+          <strong>WhatsApp:</strong> {cliente.isWhatsapp ? "Sim" : "Não"}
+        </p>
+        <p>
+          <strong>CPF:</strong> {cliente.cpf}
+        </p>
+        <p>
+          <strong>Endereço:</strong>{" "}
+          {`${cliente.endereco.rua}, ${cliente.endereco.numero}, ${cliente.endereco.bairro}, ${cliente.endereco.cidade} - ${cliente.endereco.estado}`}
+        </p>
+        <p>
+          <strong>CEP:</strong> {cliente.endereco.cep}
+        </p>
+        <p>
+          <strong>Observações:</strong> {cliente.observacoes}
+        </p>
+        <p className="mt-4">
+          <strong>Veículos:</strong>
+        </p>
+        {veiculos.length === 0 && <p>Nenhum veículo cadastrado.</p>}
+        {veiculos.map((v, i) => (
+          <p key={i}>
+            • {v.modelo} — {v.placa} ({v.ano}, {v.cor}, Chassi: {v.chassi})
+          </p>
+        ))}
+        <div className="mt-6 flex justify-end">
+          <Button variant="outline" onClick={onFechar}>
+            Fechar
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClienteCard({
+  cliente,
+  onEditar,
+  onDeletar,
+  onVer,
+}: {
   cliente: Cliente;
   onEditar: () => void;
   onDeletar: () => void;
@@ -209,18 +336,34 @@ function ClienteCard({ cliente, onEditar, onDeletar, onVer }: {
       <CardContent className="p-4">
         <h3 className="text-lg font-bold mb-1">{cliente.nome}</h3>
         <p className="text-gray-300 text-sm">{cliente.telefone}</p>
-        {cliente.whatsapp && <span className="text-green-400 text-xs">(WhatsApp)</span>}
+        {cliente.isWhatsapp && (
+          <span className="text-green-400 text-xs">(WhatsApp)</span>
+        )}
         <ul className="mt-2 text-sm list-disc list-inside text-gray-300">
-          {veiculos.map((v, i) => <li key={i}>{v.modelo} ({v.placa})</li>)}
+          {veiculos.length === 0 && <li>Nenhum veículo cadastrado</li>}
+          {veiculos.map((v, i) => (
+            <li key={i}>
+              {v.modelo} ({v.placa})
+            </li>
+          ))}
         </ul>
+
         <div className="flex space-x-2 mt-4">
-          <Button onClick={onVer} variant="outline" className="text-sm px-3 border-gray-500 text-gray-300 hover:bg-gray-700">
+          <Button
+            onClick={onVer}
+            variant="outline"
+            className="text-sm px-3 border-gray-500 text-gray-300 hover:bg-gray-700"
+          >
             Ver Dados
           </Button>
           <Button onClick={onEditar} className="bg-blue-500 text-sm px-3">
             Editar
           </Button>
-          <Button onClick={onDeletar} variant="outline" className="text-sm px-3 border-red-500 text-red-400 hover:bg-red-600 hover:text-white">
+          <Button
+            onClick={onDeletar}
+            variant="outline"
+            className="text-sm px-3 border-red-500 text-red-400 hover:bg-red-600 hover:text-white"
+          >
             Deletar
           </Button>
         </div>
@@ -229,14 +372,12 @@ function ClienteCard({ cliente, onEditar, onDeletar, onVer }: {
   );
 }
 
-
 function FormularioCliente({
   cliente,
   setCliente,
   onSalvar,
   onCancelar,
   inputClass,
-  onVoltar,
   viewMode,
 }: {
   cliente: Cliente;
@@ -244,14 +385,19 @@ function FormularioCliente({
   onSalvar: () => void;
   onCancelar: () => void;
   inputClass: string;
-  onVoltar: () => void;
   viewMode: ViewMode;
 }) {
+  const veiculos = cliente.veiculos ?? [];
+
   const handleChange = <K extends keyof Cliente>(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     field: K
   ) => {
-    setCliente((prev) => ({ ...prev, [field]: e.target.value }));
+    const value =
+      e.target.type === "checkbox"
+        ? (e.target as HTMLInputElement).checked
+        : e.target.value;
+    setCliente((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleEnderecoChange = <K extends keyof Endereco>(
@@ -273,7 +419,7 @@ function FormularioCliente({
     index: number
   ) => {
     setCliente((prev) => {
-      const novosVeiculos = [...prev.veiculos];
+      const novosVeiculos = [...(prev.veiculos ?? [])];
       novosVeiculos[index] = { ...novosVeiculos[index], [field]: e.target.value };
       return { ...prev, veiculos: novosVeiculos };
     });
@@ -282,7 +428,7 @@ function FormularioCliente({
   const addVeiculo = () => {
     setCliente((prev) => ({
       ...prev,
-      veiculos: [...prev.veiculos, { placa: "", modelo: "", ano: "", cor: "", chassi: "" }],
+      veiculos: [...(prev.veiculos ?? []), { placa: "", modelo: "", ano: "", cor: "", chassi: "" }],
     }));
   };
 
@@ -321,9 +467,9 @@ function FormularioCliente({
           />
           <div className="flex items-center mt-2 space-x-2">
             <Switch
-              checked={cliente.whatsapp}
+              checked={cliente.isWhatsapp}
               onCheckedChange={(checked) =>
-                setCliente((prev) => ({ ...prev, whatsapp: checked }))
+                setCliente((prev) => ({ ...prev, isWhatsapp: checked }))
               }
             />
             <Label>WhatsApp?</Label>
@@ -343,7 +489,7 @@ function FormularioCliente({
           />
         </div>
 
-        {/* Campos de endereço */}
+        {/* Endereço */}
         <div>
           <Label>Rua</Label>
           <Input
@@ -429,77 +575,67 @@ function FormularioCliente({
           />
         </div>
 
+        {/* Veículos */}
         <div className="space-y-6">
-          <h3 className="text-lg font-semibold mt-6">Informações do Veículo</h3>
+          <h3 className="font-semibold text-lg">Veículos</h3>
 
-          {cliente.veiculos.map((veiculo, index) => (
+          {veiculos.length === 0 && (
+            <p className="text-gray-400">Nenhum veículo cadastrado.</p>
+          )}
+
+          {veiculos.map((v, i) => (
             <div
-              key={index}
-              className="border-t border-gray-600 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4"
+              key={i}
+              className="bg-[#0f172a] border border-gray-700 p-4 rounded-md space-y-3"
             >
-              <Label className="col-span-full font-medium">Veículo {index + 1}</Label>
               <Input
-                placeholder="Placa (Ex: ABC-1234)"
-                value={veiculo.placa}
-                onChange={(e) => handleVeiculoChange(e, "placa", index)}
+                placeholder="Modelo"
+                value={v.modelo}
+                onChange={(e) => handleVeiculoChange(e, "modelo", i)}
                 className={inputClass}
-                spellCheck={false}
-                autoComplete="off"
-                style={{ WebkitTextFillColor: "white" }}
               />
               <Input
-                placeholder="Modelo (Ex: Honda CG 160)"
-                value={veiculo.modelo}
-                onChange={(e) => handleVeiculoChange(e, "modelo", index)}
+                placeholder="Placa"
+                value={v.placa}
+                onChange={(e) => handleVeiculoChange(e, "placa", i)}
                 className={inputClass}
-                spellCheck={false}
-                autoComplete="off"
-                style={{ WebkitTextFillColor: "white" }}
               />
               <Input
-                placeholder="Ano (Ex: 2020)"
-                value={veiculo.ano}
-                onChange={(e) => handleVeiculoChange(e, "ano", index)}
+                placeholder="Ano"
+                value={v.ano}
+                onChange={(e) => handleVeiculoChange(e, "ano", i)}
                 className={inputClass}
-                spellCheck={false}
-                autoComplete="off"
-                style={{ WebkitTextFillColor: "white" }}
               />
               <Input
-                placeholder="Cor (Ex: Vermelha)"
-                value={veiculo.cor}
-                onChange={(e) => handleVeiculoChange(e, "cor", index)}
+                placeholder="Cor"
+                value={v.cor}
+                onChange={(e) => handleVeiculoChange(e, "cor", i)}
                 className={inputClass}
-                spellCheck={false}
-                autoComplete="off"
-                style={{ WebkitTextFillColor: "white" }}
               />
               <Input
-                placeholder="Chassi (Ex: 9C2KC1670ER000001)"
-                value={veiculo.chassi}
-                onChange={(e) => handleVeiculoChange(e, "chassi", index)}
-                className={inputClass + " sm:col-span-2"}
-                spellCheck={false}
-                autoComplete="off"
-                style={{ WebkitTextFillColor: "white" }}
+                placeholder="Chassi"
+                value={v.chassi}
+                onChange={(e) => handleVeiculoChange(e, "chassi", i)}
+                className={inputClass}
               />
             </div>
           ))}
 
-          <Button onClick={addVeiculo} className="w-full bg-gray-600 hover:bg-gray-700">
-            + Adicionar Veículo
+          <Button onClick={addVeiculo} className="mt-2 w-full bg-green-600 hover:bg-green-700">
+            + Adicionar veículo
           </Button>
         </div>
 
-        <div className="flex justify-end space-x-4 pt-6">
-          <Button variant="outline" onClick={onVoltar}>
-            ← Voltar
-          </Button>
-          <Button onClick={onSalvar} className="bg-green-600 hover:bg-green-700">
-            Salvar Cliente
-          </Button>
-          <Button variant="outline" onClick={onCancelar}>
+        <div className="flex justify-end space-x-4 mt-6">
+          <Button
+            variant="outline"
+            className="border border-gray-500 text-gray-300 hover:bg-gray-700"
+            onClick={onCancelar}
+          >
             Cancelar
+          </Button>
+          <Button onClick={onSalvar} className="bg-blue-600 hover:bg-blue-700">
+            Salvar
           </Button>
         </div>
       </CardContent>
