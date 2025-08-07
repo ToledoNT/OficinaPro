@@ -13,10 +13,11 @@ export const useClientes = () => {
   const [clienteVisualizar, setClienteVisualizar] = useState<Cliente | null>(null);
   const [filtro, setFiltro] = useState("");
 
+  const api = new ApiService(); // cria só uma vez
+
   useEffect(() => {
     const carregarClientes = async () => {
       try {
-        const api = new ApiService();
         const lista = await api.getClientes();
         setClientes(lista.map(normalizarCliente));
       } catch (error) {
@@ -37,8 +38,6 @@ export const useClientes = () => {
       ...clienteAtual,
       veiculos: filtrarVeiculosVazios(clienteAtual.veiculos),
     };
-
-    const api = new ApiService();
 
     try {
       let result: ApiResponseCliente;
@@ -79,13 +78,12 @@ export const useClientes = () => {
     if (!confirm("Deseja realmente deletar este cliente?")) return;
 
     try {
-      const api = new ApiService();
       const result = await api.deleteCliente(id);
 
-      if (result) {
+      if (result.status) {
         setClientes((prev) => prev.filter((c) => c.id !== id));
       } else {
-        alert(`Erro ao deletar cliente: ${result || ""}`);
+        alert(`Erro ao deletar cliente: ${result.message || "Erro desconhecido."}`);
       }
     } catch (error) {
       console.error("Erro ao deletar cliente:", error);

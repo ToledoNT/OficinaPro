@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect, useMemo } from "react";
 import { ApiService } from "@/api/api-requests";
 import { Cliente } from "@/app/interfaces/clientes-interface";
@@ -10,6 +8,12 @@ import {
   Servico,
   StatusType,
 } from "@/app/interfaces/service-interface";
+import { ApiResponse } from "@/app/interfaces/response-interface"; // genérico ApiResponse<T>
+
+// Type guard genérico para ApiResponse<T> com data não nulo
+function hasData<T>(response: ApiResponse<T>): response is ApiResponse<T> & { data: NonNullable<T> } {
+  return response.data !== undefined && response.data !== null;
+}
 
 export const useServicos = () => {
   const [servicos, setServicos] = useState<Servico[]>([]);
@@ -28,8 +32,19 @@ export const useServicos = () => {
         const listaClientes: Cliente[] = await api.getClientes();
         const listaServicos: Servico[] = await api.getServicos();
 
+        // Mapear serviços para incluir o nome do cliente pelo clienteId
+        const servicosComClienteNome = listaServicos.map((servico) => {
+          const clienteEncontrado = listaClientes.find(
+            (cliente) => cliente.id === servico.clienteId
+          );
+          return {
+            ...servico,
+            cliente: clienteEncontrado ? clienteEncontrado.nome : "",
+          };
+        });
+
         setClientes(listaClientes);
-        setServicos(listaServicos);
+        setServicos(servicosComClienteNome);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       } finally {
@@ -54,10 +69,9 @@ export const useServicos = () => {
     setLoading(true);
     try {
       const api = new ApiService();
-      let response;
 
       if (servico.id) {
-        response = await api.updateService(servico as IUpdateServiceData);
+        const response = await api.updateService(servico as IUpdateServiceData);
 
         if (response.status) {
           setServicos((prev) =>
@@ -66,7 +80,12 @@ export const useServicos = () => {
           return true;
         }
       } else {
-        // Se tiver implementação de criação, você pode adicionar aqui.
+        const response = await api.registerService(servico as IRegisterServiceData);
+
+        if (response.status && hasData(response)) {
+          setServicos((prev) => [...prev, { ...servico, id: response.data.id }]);
+          return true;
+        }
       }
 
       return false;
@@ -107,7 +126,7 @@ export const useServicos = () => {
     setLoading(true);
     try {
       const api = new ApiService();
-      const response = await api.deleteService(id); // Assumindo que deleteService exista na API
+      const response = await api.deleteService(id);
 
       if (response.status) {
         setServicos((prev) => prev.filter((s) => s.id !== id));
@@ -138,7 +157,7 @@ export const useServicos = () => {
     loading,
     salvarServico,
     atualizarStatus,
-    deletarServico,          
+    deletarServico,
     criarServicoVazio: createEmptyService,
   };
 };
