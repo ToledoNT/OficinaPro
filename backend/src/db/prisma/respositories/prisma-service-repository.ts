@@ -1,0 +1,102 @@
+import { ResponseTemplateInterface } from "../../../interfaces/response-template-interface";
+import { prisma } from "../../prisma-connection"; 
+import { ResponseTemplateModel } from "../../../model/response-template-model";
+import { ICreateService } from "../../../interfaces/services/create-services-interface";
+
+export class PrismaServiceRepository {
+  async create(data: ICreateService): Promise<ResponseTemplateInterface> {
+    try {
+      const response = await prisma.service.create({
+        data,
+      });
+      return new ResponseTemplateModel(
+        true,
+        201,
+        "Serviço criado com sucesso",
+        response
+      );
+    } catch (error) {
+      console.error("Erro ao criar serviço:", error); 
+      return new ResponseTemplateModel(false, 500, "Erro ao criar serviço", []);
+    }
+  }
+
+  async update(id: string, data: Partial<ICreateService>): Promise<ResponseTemplateInterface> {
+    try {
+      const response = await prisma.service.update({
+        where: { id },
+        data,
+      });
+      return new ResponseTemplateModel(
+        true,
+        200,
+        "Serviço atualizado com sucesso",
+        response
+      );
+    } catch (error) {
+      console.error("Erro ao atualizar serviço:", error);
+      return new ResponseTemplateModel(false, 500, "Erro ao atualizar serviço", []);
+    }
+  }
+
+  async delete(id: string): Promise<ResponseTemplateInterface> {
+    try {
+      await prisma.service.delete({
+        where: { id },
+      });
+      return new ResponseTemplateModel(
+        true,
+        200,
+        "Serviço deletado com sucesso",
+        null
+      );
+    } catch (error) {
+      console.error("Erro ao deletar serviço:", error);
+      return new ResponseTemplateModel(false, 500, "Erro ao deletar serviço", []);
+    }
+  }
+  
+  async getAll(): Promise<ResponseTemplateInterface> {
+    try {
+      const response = await prisma.service.findMany({});
+      return new ResponseTemplateModel(
+        true,
+        200,
+        "Services consultados com sucesso",
+        response
+      );
+    } catch (error) {
+      return new ResponseTemplateModel(
+        false,
+        401,
+        "Erro ao consultar Services",
+        error
+      );
+    }
+  }
+
+  async findById(id: string): Promise<ResponseTemplateInterface> {
+    try {
+      const response = await prisma.service.findUnique({
+        where: { id },
+      });
+      if (!response) {
+        return new ResponseTemplateModel(false, 404, "Serviço não encontrado", null);
+      }
+      return new ResponseTemplateModel(true, 200, "Serviço encontrado", response);
+    } catch (error) {
+      console.error("Erro ao buscar serviço:", error);
+      return new ResponseTemplateModel(false, 500, "Erro ao buscar serviço", []);
+    }
+  }
+
+  async findAll(): Promise<ResponseTemplateInterface> {
+    try {
+      const response = await prisma.service.findMany();
+      return new ResponseTemplateModel(true, 200, "Serviços listados com sucesso", response);
+    } catch (error) {
+      console.error("Erro ao listar serviços:", error);
+      return new ResponseTemplateModel(false, 500, "Erro ao listar serviços", []);
+    }
+  }
+}

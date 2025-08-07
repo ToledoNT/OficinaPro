@@ -17,7 +17,8 @@ model Cliente {
   endereco     Endereco
   observacoes  String
   dataCadastro DateTime  @default(now())
-  veiculos     Veiculo[]  // array embutido de veículos
+  veiculos     Veiculo[]
+  services     Service[] 
 }
 
 type Endereco {
@@ -35,6 +36,21 @@ type Veiculo {
   ano    String
   cor    String
   chassi String
+}
+
+model Service {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  clienteId   String   @db.ObjectId
+  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  veiculo     String?
+  data        DateTime
+  descricao   String
+  finalizado  Boolean
+  status      String
+  observacoes String
+  prioridade  String?
+  valor       String?
+  pago        Boolean?
 }
 
 model Log {

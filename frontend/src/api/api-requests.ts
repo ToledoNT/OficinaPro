@@ -1,6 +1,11 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
-import { IRegisterClienteData, Cliente, IUpdateClienteData } from "@/app/interfaces/clientes-interface";
+import {
+  IRegisterClienteData,
+  Cliente,
+  IUpdateClienteData,
+} from "@/app/interfaces/clientes-interface";
 import { ApiResponseCliente, ApiResponseClientes } from "@/app/interfaces/response-interface";
+import { IRegisterServiceData, Servico } from "@/app/interfaces/service-interface";
 
 const apiBaseURL = "http://localhost:4001/api";
 
@@ -29,36 +34,102 @@ export class ApiService {
       return [];
     }
   }
-  
+
+
+
   async registerCliente(data: IRegisterClienteData): Promise<ApiResponseCliente> {
     try {
       const response = await this.api.post<ApiResponseCliente>("/client/createcliente", data);
       return response.data;
     } catch (error) {
-      return this.handleError(error, "Erro ao registrar usuário");
+      return this.handleError(error, "Erro ao registrar cliente");
     }
   }
 
-  async updateCliente(id: string | string, data: IUpdateClienteData): Promise<ApiResponseCliente> {
+  async updateCliente(id: string, data: IUpdateClienteData): Promise<ApiResponseCliente> {
     try {
       console.log("updateCliente -> id:", id, "data:", data);
       const response = await this.api.put<ApiResponseCliente>(`/client/updateclient/${id}`, data);
       return response.data;
     } catch (error) {
-      return this.handleError(error, "Erro ao atualizar usuário");
+      return this.handleError(error, "Erro ao atualizar cliente");
     }
   }
-  
 
   async deleteCliente(id: string): Promise<ApiResponseCliente> {
     try {
       const response = await this.api.delete<ApiResponseCliente>(`/client/deleteclient/${id}`);
       return response.data;
     } catch (error) {
-      return this.handleError(error, "Erro ao deletar usuário");
+      return this.handleError(error, "Erro ao deletar cliente");
+    }
+  }
+
+  //Services
+  async getServicos(): Promise<Servico[]> {
+    try {
+      const response = await this.api.get<{
+        status: boolean;
+        data: IRegisterServiceData[];
+        message?: string;
+      }>("/service/allservices");
+  
+      if (response.data.status) {
+        const servicosComId: Servico[] = response.data.data.map((item, index) => {
+          return {
+            id: index.toString(),
+            ...item,
+            data: item.data ?? "",
+          };
+        });
+        return servicosComId;
+      } else {
+        console.error("Erro na API ao buscar serviços:", response.data.message);
+        return [];
+      }
+    } catch (error) {
+      console.error("Erro ao buscar serviços:", error);
+      return [];
+    }
+  }
+
+  async updateService(id: string, dados: Partial<Servico>): Promise<{ status: boolean; message?: string }> {
+    try {
+      const response = await this.api.put<{
+        status: boolean;
+        message?: string;
+        data?: Servico;
+      }>(`/service/${id}`, dados);
+  
+      if (response.data.status) {
+        return {
+          status: true,
+          message: response.data.message || "Serviço atualizado com sucesso",
+        };
+      } else {
+        console.error("Erro na API ao atualizar serviço:", response.data.message);
+        return {
+          status: false,
+          message: response.data.message || "Erro desconhecido ao atualizar serviço",
+        };
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar serviço:", error);
+      return {
+        status: false,
+        message: "Erro na requisição para atualizar serviço",
+      };
     }
   }
   
+  async registerService(data: IRegisterServiceData): Promise<ApiResponseCliente> {
+    try {
+      const response = await this.api.post<ApiResponseCliente>("/service/createservice", data);
+      return response.data;
+    } catch (error) {
+      return this.handleError(error, "Erro ao registrar serviço");
+    }
+  }
 
   private handleError(error: unknown, defaultMessage: string): ApiResponseCliente {
     if (axios.isAxiosError(error)) {
