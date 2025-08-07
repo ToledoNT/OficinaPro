@@ -77,7 +77,7 @@ export class PrismaClientRepository {
 
   async update(
     userId: string,
-    value: Partial<IUpdateClient>
+    value: Partial<IUpdateClient> & { id?: string }
   ): Promise<ResponseTemplateInterface> {
     try {
       const existingUser = await prisma.cliente.findUnique({ where: { id: userId } });
@@ -86,12 +86,13 @@ export class PrismaClientRepository {
         return new ResponseTemplateModel(false, 404, "Usuário não encontrado", null);
       }
   
-      const { endereco, veiculos, ...rest } = value as any;
+      // Desestrutura id fora, para garantir que ele não vai para o Prisma
+      const { id, endereco, veiculos, ...rest } = value;
   
       const dataForPrisma: any = {
         ...rest,
-        ...(endereco ? { endereco: { set: endereco } } : undefined),  
-        ...(veiculos ? { veiculos: veiculos } : undefined),          
+        ...(endereco ? { endereco: { set: endereco } } : undefined),
+        ...(veiculos ? { veiculos: { set: veiculos } } : undefined), // ajuste correto aqui
       };
   
       const response = await prisma.cliente.update({

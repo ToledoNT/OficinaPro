@@ -13,13 +13,6 @@ export class UpdateClienteController {
       return;
     }
     const updateData: IUpdateClient = req.body;
-    if (!updateData || Object.keys(updateData).length === 0) {
-      res.status(400).send({
-        code: 400,
-        message: "Nenhum dado de atualização fornecido.",
-      });
-      return;
-    }
     const updated = await new UpdateClient().execute(id, updateData);
     res.status(typeof updated.code === "number" ? updated.code : 200).send(updated);
   }

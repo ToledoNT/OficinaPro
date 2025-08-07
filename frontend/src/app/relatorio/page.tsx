@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation'; 
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
+import { Input } from '../clientes/components/ui/input';
+import { Label } from '../clientes/components/ui/label';
+import { Button } from '../clientes/components/ui/button';
+import { Card, CardContent } from '../clientes/components/ui/card';
 import { RelatorioItem } from '../interfaces/relatorio-interface';
 
 export default function Relatorios() {

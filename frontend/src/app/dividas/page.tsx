@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Textarea } from '../components/ui/textarea';
-import { Button } from '../components/ui/button';
-import { Switch } from '../components/ui/switch';
-import { Card, CardContent } from '../components/ui/card';
+import { Input } from '../clientes/components/ui/input';
+import { Label } from '../clientes/components/ui/label';
+import { Textarea } from '../clientes/components/ui/textarea';
+import { Button } from '../clientes/components/ui/button';
+import { Switch } from '../clientes/components/ui/switch';
+import { Card, CardContent } from '../clientes/components/ui/card';
 
 interface Divida {
   id: number;

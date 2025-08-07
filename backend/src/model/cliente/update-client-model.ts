@@ -18,11 +18,11 @@ export class UpdateClientModel implements IUpdateClient {
   observacoes?: string;
   dataCadastro?: Date;
   veiculos?: {
-    placa: string;
+    placa?: string;
     modelo: string;
-    ano: string;
-    cor: string;
-    chassi: string;
+    ano?: string;
+    cor?: string;
+    chassi?: string;
   }[];
 
   constructor(data: Partial<IUpdateClient> & { id: string }) {
@@ -44,11 +44,7 @@ export class UpdateClientModel implements IUpdateClient {
     }));
   }
 
-  /**
-   * Retorna um objeto plano com somente os campos definidos,
-   * ideal para uso em update no Prisma.
-   */
-  toPayload() {
+  toPayload(): Partial<IUpdateClient> {
     const payload: Partial<IUpdateClient> = {};
 
     if (this.nome !== undefined) payload.nome = this.nome;
@@ -60,7 +56,7 @@ export class UpdateClientModel implements IUpdateClient {
     if (this.observacoes !== undefined) payload.observacoes = this.observacoes;
     if (this.dataCadastro !== undefined) payload.dataCadastro = this.dataCadastro;
 
-    if (this.veiculos && this.veiculos.length > 0) {
+    if (this.veiculos?.length) {
       const filteredVeiculos = this.veiculos.filter((v) => {
         const isEmpty =
           (!v.placa || v.placa.trim() === "") &&

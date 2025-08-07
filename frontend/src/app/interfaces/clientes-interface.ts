@@ -26,7 +26,6 @@ export interface Cliente {
   veiculos: Veiculo[];
 }
 
-
 export interface IRegisterClienteData {
   nome: string;
   telefone: string;
@@ -46,3 +45,5 @@ export interface IUpdateClienteData {
   observacoes?: string;
   veiculos?: Veiculo[];
 }
+
+export type ViewMode = "ver" | "cadastrar" | "editar";

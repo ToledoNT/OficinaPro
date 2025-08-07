@@ -15,10 +15,10 @@ export interface IUpdateClient {
   observacoes?: string;
   dataCadastro?: Date;
   veiculos?: {
-    placa: string;
+    placa?: string;
     modelo: string;
-    ano: string;
-    cor: string;
-    chassi: string;
+    ano?: string;
+    cor?: string;
+    chassi?: string;
   }[];
 }
