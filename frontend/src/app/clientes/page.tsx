@@ -203,7 +203,7 @@ export default function Clientes() {
                 className="border border-gray-500 text-gray-200 hover:bg-gray-700"
                 onClick={() => router.push("/")}
               >
-                ← Início
+                ← Voltar para Início
               </Button>
             </div>
 
@@ -247,7 +247,6 @@ export default function Clientes() {
                         ))}
                       </ul>
 
-                      {/* Botões agora ficam embaixo, alinhados em linha com espaçamento */}
                       <div className="mt-4 flex justify-center gap-3">
                         <Button
                           variant="outline"
