@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "../clientes/components/ui/button";
 import { Servico } from "../interfaces/service-interface";
 import { Input } from "../clientes/components/ui/input";
@@ -29,6 +30,8 @@ export default function ServicosPage() {
     criarServicoVazio,
   } = useServicos();
 
+  const [servicoVisualizar, setServicoVisualizar] = useState<Servico | null>(null);
+
   const handleSave = async (servico: Servico) => {
     const success = await salvarServico(servico);
     if (success) {
@@ -45,29 +48,41 @@ export default function ServicosPage() {
         <div className="flex justify-between items-center mb-4">
           <div className="flex space-x-2">
 
-            {/* Ver Serviços - Sempre azul (solid), mesmo clicado */}
-            <Button
-              variant="solid"
-              onClick={() => setViewMode("ver")}
-              // não usa disabled para evitar efeito "apagado"
-              className={viewMode === "ver" ? "shadow-lg" : ""}
-            >
-              Ver Serviços
-            </Button>
+            {viewMode === "ver" && (
+              <>
+                <Button
+                  variant="solid"
+                  onClick={() => setViewMode("ver")}
+                  className="shadow-lg"
+                >
+                  Ver Serviços
+                </Button>
 
-            {/* Cadastrar Serviço - Sempre azul (solid), mesmo clicado */}
-            <Button
-              variant="solid"
-              onClick={() => {
-                setServicoAtual(criarServicoVazio());
-                setViewMode("cadastrar");
-              }}
-              className={viewMode === "cadastrar" ? "shadow-lg" : ""}
-            >
-              Cadastrar Serviço
-            </Button>
+                <Button
+                  variant="solid"
+                  onClick={() => {
+                    setServicoAtual(criarServicoVazio());
+                    setViewMode("cadastrar");
+                  }}
+                  className=""
+                >
+                  Cadastrar Serviço
+                </Button>
+              </>
+            )}
 
-            {/* Voltar para tela inicial (contorno, sem preenchimento) */}
+            {viewMode !== "ver" && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setServicoAtual(criarServicoVazio());
+                  setViewMode("ver");
+                }}
+              >
+                ← Voltar
+              </Button>
+            )}
+
             {viewMode === "ver" && (
               <Button
                 variant="outline"
@@ -81,7 +96,6 @@ export default function ServicosPage() {
           </div>
         </div>
 
-        {/* Campo de busca */}
         {viewMode === "ver" && (
           <div className="mb-10">
             <Input
@@ -93,38 +107,49 @@ export default function ServicosPage() {
           </div>
         )}
 
-        {/* Botão Voltar (modo cadastrar/editar) */}
-        {viewMode !== "ver" && (
-          <div className="mb-6">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setServicoAtual(criarServicoVazio());
-                setViewMode("ver");
-              }}
-            >
-              ← Voltar
-            </Button>
-          </div>
-        )}
-
-        {/* Conteúdo principal */}
         {viewMode === "ver" ? (
-          <ServicoList
-            servicos={servicosFiltrados}
-            statusFilter={statusFilter as StatusType | null}
-            onStatusChange={atualizarStatus}
-            onEdit={(servico: Servico) => {
-              setServicoAtual(servico);
-              setViewMode("cadastrar");
-            }}
-            onDelete={(servicoId: string) => {
-              deletarServico(servicoId);
-            }}
-            onStatusFilterChange={(status: StatusType | null) => {
-              setStatusFilter(status);
-            }}
-          />
+          <>
+            <ServicoList
+              servicos={servicosFiltrados}
+              statusFilter={statusFilter as StatusType | null}
+              onStatusChange={atualizarStatus}
+              onEdit={(servico: Servico) => {
+                setServicoAtual(servico);
+                setViewMode("cadastrar");
+              }}
+              onDelete={(servicoId: string) => {
+                deletarServico(servicoId);
+              }}
+              onView={(servico) => setServicoVisualizar(servico)}
+              onStatusFilterChange={(status: StatusType | null) => {
+                setStatusFilter(status);
+              }}
+            />
+
+            {/* Modal simples para visualizar serviço */}
+            {servicoVisualizar && (
+              <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+                <div className="bg-[#1e293b] p-6 rounded-lg max-w-md w-full space-y-4">
+                  <h2 className="text-xl font-bold">Detalhes do Serviço</h2>
+                  <p><strong>Cliente:</strong> {servicoVisualizar.cliente}</p>
+                  <p><strong>Veículo:</strong> {servicoVisualizar.veiculo}</p>
+                  <p><strong>Status:</strong> {servicoVisualizar.status}</p>
+                  <p><strong>Descrição:</strong> {servicoVisualizar.descricao}</p>
+                  {servicoVisualizar.observacoes && (
+                    <p><strong>Observações:</strong> {servicoVisualizar.observacoes}</p>
+                  )}
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={() => setServicoVisualizar(null)}
+                    >
+                      Fechar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <ServicoForm
             servico={servicoAtual}
