@@ -2,6 +2,7 @@ import { ResponseTemplateInterface } from "../../../interfaces/response-template
 import { prisma } from "../../prisma-connection"; 
 import { ResponseTemplateModel } from "../../../model/response-template-model";
 import { ICreateService } from "../../../interfaces/services/create-services-interface";
+import { IUpdateService } from "../../../interfaces/services/update-service-interface";
 
 export class PrismaServiceRepository {
   async create(data: ICreateService): Promise<ResponseTemplateInterface> {
@@ -21,24 +22,29 @@ export class PrismaServiceRepository {
     }
   }
 
-  async update(id: string, data: Partial<ICreateService>): Promise<ResponseTemplateInterface> {
+  async update(id: string, data: Partial<IUpdateService>): Promise<ResponseTemplateInterface> {
     try {
+      const payload: any = { ...data };
+  
+      delete payload.cliente;
+  
+      if (payload.clienteId) {
+        payload.cliente = { connect: { id: payload.clienteId } };
+        delete payload.clienteId;
+      }
+  
       const response = await prisma.service.update({
         where: { id },
-        data,
+        data: payload,
       });
-      return new ResponseTemplateModel(
-        true,
-        200,
-        "Serviço atualizado com sucesso",
-        response
-      );
+  
+      return new ResponseTemplateModel(true, 200, "Serviço atualizado com sucesso", response);
     } catch (error) {
       console.error("Erro ao atualizar serviço:", error);
       return new ResponseTemplateModel(false, 500, "Erro ao atualizar serviço", []);
     }
   }
-
+  
   async delete(id: string): Promise<ResponseTemplateInterface> {
     try {
       await prisma.service.delete({

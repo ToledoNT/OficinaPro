@@ -18,7 +18,7 @@ model Cliente {
   observacoes  String
   dataCadastro DateTime  @default(now())
   veiculos     Veiculo[]
-  services     Service[] 
+  services     Service[]  
 }
 
 type Endereco {
@@ -39,11 +39,11 @@ type Veiculo {
 }
 
 model Service {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  clienteId   String   @db.ObjectId
-  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  clienteId   String    @db.ObjectId
+  cliente     Cliente   @relation(fields: [clienteId], references: [id])
   veiculo     String?
-  data        DateTime
+  data        DateTime  @default(now())   
   descricao   String
   finalizado  Boolean
   status      String

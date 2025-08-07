@@ -2,7 +2,7 @@ import { ResponseTemplateInterface } from "../../../interfaces/response-template
 import { prisma } from "../../prisma-connection"; 
 import { ResponseTemplateModel } from "../../../model/response-template-model";
 import { ICreateClient } from "../../../interfaces/cliente/create-cliente-interfaces";
-import { IUpdateClient } from "../../../interfaces/cliente/update-user-interface";
+import { IUpdateClient } from "../../../interfaces/cliente/update-cliente-interface";
 
 export class PrismaClientRepository {
   async create(data: ICreateClient): Promise<ResponseTemplateInterface> {
@@ -90,8 +90,8 @@ export class PrismaClientRepository {
   
       const dataForPrisma: any = {
         ...rest,
-        ...(endereco ? { endereco: { set: endereco } } : undefined),  // para embutido, use set
-        ...(veiculos ? { veiculos: veiculos } : undefined),          // atualiza o array completo
+        ...(endereco ? { endereco: { set: endereco } } : undefined),  
+        ...(veiculos ? { veiculos: veiculos } : undefined),          
       };
   
       const response = await prisma.cliente.update({
@@ -106,73 +106,3 @@ export class PrismaClientRepository {
     }
   }
 }
-  // async findById(value: string): Promise<ResponseTemplateInterface> {
-  //   try {
-  //     const response = await prisma.user.findMany({
-  //       where: {
-  //         : value,
-  //       },
-  //     });
-  //     return new ResponseTemplateModel(
-  //       true,
-  //       200,
-  //       "Cliente encontrado com sucesso",
-  //       response
-  //     );
-  //   } catch (error) {
-  //     return new ResponseTemplateModel(
-  //       false,
-  //       500,
-  //       "Erro ao consultar cliente",
-  //       error
-  //     );
-  //   }
-  // }
-
-
-
-  // async update(
-  //   userId: string,
-  //   value: Partial<IUpdateUser> 
-  // ): Promise<ResponseTemplateInterface> {
-  //   try {
-  //     const existingUser = await prisma.user.findUnique({ where: { id: userId } });
-  
-  //     if (!existingUser) {
-  //       return new ResponseTemplateModel(false, 404, "Usuário não encontrado", null);
-  //     }
-  
-  //     const response = await prisma.user.update({
-  //       where: { id: userId },
-  //       data: value,
-  //     });
-  
-  //     return new ResponseTemplateModel(true, 200, "Cliente atualizado com sucesso", response);
-  //   } catch (error) {
-  //     return new ResponseTemplateModel(false, 500, "Erro ao atualizar cliente", error);
-  //   }
-  // }
-  
-  // async findByEmail(email: string): Promise<ResponseTemplateInterface> {
-  //   try {
-  //     const response = await prisma.cliente.findUnique({
-  //       where: { email },
-  //     });
-  //     if (!response) {
-  //       throw new Error("Cliente não encontrado na base");
-  //     }
-  //     return new ResponseTemplateModel(
-  //       true,
-  //       200,
-  //       "Cliente encontrado com sucesso",
-  //       response
-  //     );
-  //   } catch (error) {
-  //     return new ResponseTemplateModel(
-  //       false,
-  //       401,
-  //       "Cliente não encontrado na base",
-  //       error
-  //     );
-  //   }
-  

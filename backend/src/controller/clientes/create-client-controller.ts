@@ -14,11 +14,9 @@ export class CreateClientController {
       });
       return;
     }
-
     const createUserModel = new CreateClientModel(userData);
     const payload = createUserModel.toPayload() as ICreateClient;
     const createdUser = await new CreateUser().execute(payload);
-
     const statusCode =
       typeof createdUser?.code === "number" ? createdUser.code : 201;
 
