@@ -25,9 +25,9 @@ const STATUS_OPTIONS = [
   "Finalizado",
   "Entregue",
   "Cancelado",
-];
+] as const;
 
-const STATUS_STYLES: Record<string, string> = {
+const STATUS_STYLES: Record<typeof STATUS_OPTIONS[number], string> = {
   "Em fila": "bg-gray-600 text-white",
   "Em andamento": "bg-blue-500 text-white",
   "Aguardando peça": "bg-orange-500 text-white",
@@ -38,7 +38,7 @@ const STATUS_STYLES: Record<string, string> = {
   Cancelado: "bg-red-600 text-white",
 };
 
-const PRIORITY_OPTIONS = ["Baixa", "Média", "Alta"];
+const PRIORITY_OPTIONS = ["Baixa", "Média", "Alta"] as const;
 
 type ServicoRaw = Omit<Servico, "id"> & { id?: number | string | null };
 
@@ -80,20 +80,18 @@ export default function ServicosPage() {
   const [loading, setLoading] = useState(false);
 
   const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [clienteBusca, setClienteBusca] = useState<string>("");
+  const [clienteBusca, setClienteBusca] = useState("");
   const [showClienteSuggestions, setShowClienteSuggestions] = useState(false);
   const clienteSuggestionRef = useRef<HTMLDivElement | null>(null);
 
-  const [veiculoBusca, setVeiculoBusca] = useState<string>("");
+  const [veiculoBusca, setVeiculoBusca] = useState("");
   const [showVeiculoSuggestions, setShowVeiculoSuggestions] = useState(false);
   const veiculoSuggestionRef = useRef<HTMLDivElement | null>(null);
 
-  const [kanbanStatusFilter, setKanbanStatusFilter] = useState<string | null>(
-    null
-  );
+  const [kanbanStatusFilter, setKanbanStatusFilter] = useState<string | null>(null);
 
   const inputClass =
-    "bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500";
+    "bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded";
 
   useEffect(() => {
     async function carregarDados() {
@@ -101,7 +99,7 @@ export default function ServicosPage() {
       try {
         const api = new ApiService();
 
-        // Buscar clientes primeiro para associar nome
+        // Buscar clientes
         const listaClientes = await api.getClientes();
         const clientesNormalizados = listaClientes.map((c) => ({
           ...c,
@@ -120,7 +118,7 @@ export default function ServicosPage() {
         if (viewMode === "ver") {
           const listaServicosRaw = await api.getServicos();
 
-          // Mapear e juntar o nome do cliente com base no clienteId
+          // Associar nome do cliente
           const servicosComNomeCliente = listaServicosRaw.map((s: ServicoRaw) => {
             const cliente = clientesNormalizados.find((c) => c.id === s.clienteId);
             return {
@@ -198,7 +196,7 @@ export default function ServicosPage() {
   }, [veiculoBusca, veiculosDoCliente]);
 
   function statusBadge(status: string) {
-    const style = STATUS_STYLES[status] || "bg-gray-500 text-white";
+    const style = STATUS_STYLES[status as typeof STATUS_OPTIONS[number]] || "bg-gray-500 text-white";
     return (
       <span
         className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${style}`}
@@ -209,7 +207,7 @@ export default function ServicosPage() {
   }
 
   async function salvarServico() {
-    if (!servicoAtual.cliente.trim() || !servicoAtual.descricao) {
+    if (!servicoAtual.cliente.trim() || !servicoAtual.descricao.trim()) {
       alert("Preencha os campos obrigatórios (Cliente e Descrição).");
       return;
     }
@@ -219,16 +217,35 @@ export default function ServicosPage() {
       const api = new ApiService();
 
       if (servicoAtual.id) {
-        const response = await api.updateService(servicoAtual.id, servicoAtual);
+        // Atualizar serviço
+        const response = await api.updateService({
+          id: servicoAtual.id,
+          cliente: servicoAtual.cliente,
+          clienteId: servicoAtual.clienteId,
+          veiculo: servicoAtual.veiculo,
+          data: new Date().toISOString(), // ajustar conforme seu caso
+          descricao: servicoAtual.descricao,
+          finalizado: servicoAtual.finalizado,
+          status: servicoAtual.status,
+          observacoes: servicoAtual.observacoes,
+          prioridade: servicoAtual.prioridade,
+          valor: servicoAtual.valor,
+          pago: servicoAtual.pago,
+        });
+
         if (response.status) {
           alert("Serviço atualizado com sucesso!");
         } else {
           alert(`Erro ao atualizar serviço: ${response.message || "Erro desconhecido"}`);
         }
       } else {
-        // Criação: chama rota create
+        // Criar serviço
         const { id, ...servicoParaSalvar } = servicoAtual;
-        const response = await api.registerService(servicoParaSalvar);
+        const response = await api.registerService({
+          ...servicoParaSalvar,
+          data: new Date().toISOString(), // ajuste a data conforme necessário
+        });
+
         if (response.status) {
           alert("Serviço cadastrado com sucesso!");
         } else {
@@ -236,10 +253,8 @@ export default function ServicosPage() {
         }
       }
 
-      // Recarrega lista de serviços atualizada
+      // Recarregar lista de serviços
       const listaServicosRaw = await api.getServicos();
-
-      // Re-merge com clientes para garantir nome atualizado
       const servicosComNomeCliente = listaServicosRaw.map((s: ServicoRaw) => {
         const cliente = clientes.find((c) => c.id === s.clienteId);
         return {
@@ -248,10 +263,9 @@ export default function ServicosPage() {
           cliente: cliente ? cliente.nome : "",
         };
       });
-
       setServicos(servicosComNomeCliente);
 
-      // Reseta formulário e view
+      // Resetar formulário e view
       setServicoAtual(criarServicoVazio());
       setClienteBusca("");
       setVeiculoBusca("");
@@ -359,12 +373,14 @@ export default function ServicosPage() {
                       : "bg-gray-700 text-gray-300"
                   }`}
                   onClick={() => setKanbanStatusFilter(null)}
+                  type="button"
                 >
                   Todos
                 </button>
                 {STATUS_OPTIONS.map((status) => (
                   <button
                     key={status}
+                    type="button"
                     className={`px-3 py-1 rounded ${
                       kanbanStatusFilter === status
                         ? "ring-2 ring-blue-500"
@@ -658,6 +674,7 @@ export default function ServicosPage() {
               </Button>
               <Button
                 variant="outline"
+                type="button"
                 onClick={() => {
                   setServicoAtual(criarServicoVazio());
                   setClienteBusca("");

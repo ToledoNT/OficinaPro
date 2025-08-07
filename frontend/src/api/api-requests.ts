@@ -5,7 +5,7 @@ import {
   IUpdateClienteData,
 } from "@/app/interfaces/clientes-interface";
 import { ApiResponseCliente, ApiResponseClientes } from "@/app/interfaces/response-interface";
-import { IRegisterServiceData, Servico } from "@/app/interfaces/service-interface";
+import { IRegisterServiceData, IUpdateServiceData, Servico } from "@/app/interfaces/service-interface";
 
 const apiBaseURL = "http://localhost:4001/api";
 
@@ -22,7 +22,6 @@ export class ApiService {
   async getClientes(): Promise<Cliente[]> {
     try {
       const response = await this.api.get<ApiResponseClientes>("/client/allclients");
-      console.log("Resposta da API getClientes:", response.data);
       if (response.data.status) {
         return response.data.data || [];
       } else {
@@ -35,8 +34,6 @@ export class ApiService {
     }
   }
 
-
-
   async registerCliente(data: IRegisterClienteData): Promise<ApiResponseCliente> {
     try {
       const response = await this.api.post<ApiResponseCliente>("/client/createcliente", data);
@@ -48,7 +45,6 @@ export class ApiService {
 
   async updateCliente(id: string, data: IUpdateClienteData): Promise<ApiResponseCliente> {
     try {
-      console.log("updateCliente -> id:", id, "data:", data);
       const response = await this.api.put<ApiResponseCliente>(`/client/updateclient/${id}`, data);
       return response.data;
     } catch (error) {
@@ -65,7 +61,6 @@ export class ApiService {
     }
   }
 
-  //Services
   async getServicos(): Promise<Servico[]> {
     try {
       const response = await this.api.get<{
@@ -73,7 +68,7 @@ export class ApiService {
         data: IRegisterServiceData[];
         message?: string;
       }>("/service/allservices");
-  
+
       if (response.data.status) {
         const servicosComId: Servico[] = response.data.data.map((item, index) => {
           return {
@@ -93,24 +88,31 @@ export class ApiService {
     }
   }
 
-  async updateService(id: string, dados: Partial<Servico>): Promise<{ status: boolean; message?: string }> {
+  async updateService(
+    dados: IUpdateServiceData
+  ): Promise<{ status: boolean; message?: string }> {
     try {
+      if (!dados.id) {
+        throw new Error("ID do serviço é obrigatório para atualização.");
+      }
+      const { id, ...dataToUpdate } = dados;
       const response = await this.api.put<{
         status: boolean;
         message?: string;
         data?: Servico;
-      }>(`/service/${id}`, dados);
+      }>(`/service/updateservice/${id}`, dataToUpdate);
+      const { status, message } = response.data;
   
-      if (response.data.status) {
+      if (status) {
         return {
           status: true,
-          message: response.data.message || "Serviço atualizado com sucesso",
+          message: message || "Serviço atualizado com sucesso",
         };
       } else {
-        console.error("Erro na API ao atualizar serviço:", response.data.message);
+        console.error("Erro na API ao atualizar serviço:", message);
         return {
           status: false,
-          message: response.data.message || "Erro desconhecido ao atualizar serviço",
+          message: message || "Erro desconhecido ao atualizar serviço",
         };
       }
     } catch (error) {

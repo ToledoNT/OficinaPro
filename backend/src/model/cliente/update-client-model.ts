@@ -1,4 +1,4 @@
-import { IUpdateClient } from "../../interfaces/cliente/update-user-interface";
+import { IUpdateClient } from "../../interfaces/cliente/update-cliente-interface";
 
 export class UpdateClientModel implements IUpdateClient {
   id: string;

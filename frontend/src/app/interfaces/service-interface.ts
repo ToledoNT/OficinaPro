@@ -26,3 +26,18 @@ export interface IRegisterServiceData {
   valor?: string;
   pago?: boolean;
 }
+
+export interface IUpdateServiceData {
+  id: string;           
+  cliente?: string;
+  clienteId?: string;
+  veiculo?: string;
+  data?: string;
+  descricao?: string;
+  finalizado?: boolean;
+  status?: string;
+  observacoes?: string;
+  prioridade?: string;
+  valor?: string;
+  pago?: boolean;
+}
