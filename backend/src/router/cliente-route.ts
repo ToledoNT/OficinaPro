@@ -36,9 +36,4 @@ router.put(
   updateClientController.handle.bind(updateClientController)
 );
 
-
-
-
-
-
 export default router;
