@@ -223,7 +223,7 @@ export default function ServicosPage() {
           cliente: servicoAtual.cliente,
           clienteId: servicoAtual.clienteId,
           veiculo: servicoAtual.veiculo,
-          data: new Date().toISOString(), // ajustar conforme seu caso
+          data: new Date().toISOString(),
           descricao: servicoAtual.descricao,
           finalizado: servicoAtual.finalizado,
           status: servicoAtual.status,
@@ -243,7 +243,7 @@ export default function ServicosPage() {
         const { id, ...servicoParaSalvar } = servicoAtual;
         const response = await api.registerService({
           ...servicoParaSalvar,
-          data: new Date().toISOString(), // ajuste a data conforme necessário
+          data: new Date().toISOString(),
         });
 
         if (response.status) {
@@ -307,12 +307,21 @@ export default function ServicosPage() {
     setViewMode("cadastrar");
   }
 
-  function atualizarStatusServico(id: string, novoStatus: string) {
-    setServicos((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status: novoStatus } : s))
-    );
-  }
+  const servicoService = new ApiService();
 
+  async function atualizarStatusServico(id: string, novoStatus: string) {
+    try {
+      await servicoService.updateService({ id, status: novoStatus });  
+      
+      setServicos((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, status: novoStatus } : s))
+      );
+    } catch (error) {
+      console.error('Erro ao atualizar o status:', error);
+      alert('Falha ao atualizar o status do serviço.');
+    }
+  }
+  
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
       <div className="max-w-6xl mx-auto">
@@ -342,13 +351,16 @@ export default function ServicosPage() {
             >
               Cadastrar Serviço
             </Button>
-            <Button
-              variant="outline"
-              className="border border-gray-500 text-gray-200 hover:bg-gray-700"
-              onClick={() => router.push("/")}
-            >
-              ← Voltar para Início
-            </Button>
+            {/* Botão Voltar para Início - só aparece no modo visualização */}
+            {viewMode === "ver" && (
+              <Button
+                variant="outline"
+                className="border border-gray-500 text-gray-200 hover:bg-gray-700"
+                onClick={() => router.push("/")}
+              >
+                ← Voltar para Início
+              </Button>
+            )}
           </div>
 
           {viewMode === "ver" && (
@@ -360,6 +372,22 @@ export default function ServicosPage() {
             />
           )}
         </div>
+
+        {/* Botão de Voltar para lista - só aparece no modo cadastro/edição */}
+        {viewMode === "cadastrar" && (
+          <div className="mb-6">
+            <Button
+              variant="outline"
+              className="border border-gray-500 text-gray-200 hover:bg-gray-700"
+              onClick={() => {
+                setServicoAtual(criarServicoVazio());
+                setViewMode("ver");
+              }}
+            >
+              ← Voltar 
+            </Button>
+          </div>
+        )}
 
         {viewMode === "ver" ? (
           <>
