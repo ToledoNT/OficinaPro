@@ -2,7 +2,7 @@ import { Button } from "@/app/clientes/components/ui/button";
 import { Input } from "@/app/clientes/components/ui/input";
 import { Label } from "@/app/clientes/components/ui/label";
 import { Textarea } from "@/app/clientes/components/ui/textarea";
-import { Cliente } from "@/app/interfaces/clientes-interface";
+import { Cliente, Veiculo } from "@/app/interfaces/clientes-interface";
 import { Servico, STATUS_OPTIONS, PRIORITY_OPTIONS } from "@/app/interfaces/service-interface";
 import { useState, useEffect } from "react";
 
@@ -16,12 +16,28 @@ interface ServicoFormProps {
 
 export const ServicoForm = ({ servico, clientes, onSave, onCancel, loading }: ServicoFormProps) => {
   const [formData, setFormData] = useState<Servico>(servico);
+  const [veiculosCliente, setVeiculosCliente] = useState<Veiculo[]>([]);
+  const [clienteBusca, setClienteBusca] = useState("");
+  const [clienteSugestoes, setClienteSugestoes] = useState<Cliente[]>([]);
 
   useEffect(() => {
     setFormData(servico);
-  }, [servico]);
+    const clienteSelecionado = clientes.find(c => c.id === servico.clienteId);
+    setClienteBusca(clienteSelecionado?.nome || "");
+    setVeiculosCliente(clienteSelecionado?.veiculos || []);
+  }, [servico, clientes]);
 
-  // Tipagem genérica para evitar 'any' e garantir o tipo correto do valor
+  const handleClienteSelecionado = (cliente: Cliente) => {
+    setFormData(prev => ({
+      ...prev,
+      clienteId: cliente.id,
+      veiculo: "",
+    }));
+    setClienteBusca(cliente.nome);
+    setVeiculosCliente(cliente.veiculos || []);
+    setClienteSugestoes([]);
+  };
+
   const handleChange = <K extends keyof Servico>(field: K, value: Servico[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -31,35 +47,71 @@ export const ServicoForm = ({ servico, clientes, onSave, onCancel, loading }: Se
     onSave(formData);
   };
 
+  useEffect(() => {
+    const busca = clienteBusca.trim().toLowerCase();
+
+    if (busca === "") {
+      setClienteSugestoes([]);
+      return;
+    }
+
+    const resultados = clientes.filter(c =>
+      c.nome.toLowerCase().includes(busca)
+    );
+    setClienteSugestoes(resultados);
+
+    const clienteExato = clientes.find(c => c.nome.toLowerCase() === busca);
+    if (clienteExato) {
+      handleClienteSelecionado(clienteExato);
+    }
+  }, [clienteBusca, clientes]);
+
   return (
     <form onSubmit={handleSubmit} className="max-w-xl mx-auto bg-[#1e293b] p-6 rounded-md shadow-md space-y-6">
-
       {/* Cliente */}
-      <div>
-        <Label htmlFor="clienteId">Cliente *</Label>
-        <select
-          id="clienteId"
-          value={formData.clienteId}
-          onChange={(e) => handleChange("clienteId", e.target.value)}
+      <div className="relative">
+        <Label htmlFor="clienteBusca">Cliente *</Label>
+        <Input
+          id="clienteBusca"
+          type="text"
+          value={clienteBusca}
+          onChange={(e) => setClienteBusca(e.target.value)}
+          placeholder="Digite o nome do cliente"
           required
           className="w-full p-2 rounded bg-gray-700 text-white"
-        >
-          <option value="">Selecione o cliente</option>
-          {clientes.map(c => (
-            <option key={c.id} value={c.id}>{c.nome}</option>
-          ))}
-        </select>
+        />
+        {clienteSugestoes.length > 0 && (
+          <ul className="absolute z-10 bg-white text-black w-full mt-1 border border-gray-300 rounded shadow-lg max-h-40 overflow-y-auto">
+            {clienteSugestoes.map((c) => (
+              <li
+                key={c.id}
+                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                onClick={() => handleClienteSelecionado(c)}
+              >
+                {c.nome}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Veículo */}
       <div>
         <Label htmlFor="veiculo">Veículo</Label>
-        <Input
+        <select
           id="veiculo"
           value={formData.veiculo || ""}
           onChange={(e) => handleChange("veiculo", e.target.value)}
-          placeholder="Informe o veículo"
-        />
+          className="w-full p-2 rounded bg-gray-700 text-white"
+          disabled={veiculosCliente.length === 0}
+        >
+          <option value="">Selecione o veículo</option>
+          {veiculosCliente.map((v) => (
+            <option key={v.placa} value={v.placa}>
+              {v.modelo} - {v.placa}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Descrição */}

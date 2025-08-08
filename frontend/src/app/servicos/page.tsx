@@ -102,22 +102,22 @@ export default function ServicosPage() {
         {viewMode === "ver" ? (
           <>
             <ServicoList
-  servicos={servicosFiltrados}
-  statusFilter={statusFilter as StatusType | null}
-  onStatusChange={atualizarStatus}
-  onEdit={(servico: Servico) => {
-    setServicoAtual(servico);
-    setViewMode("cadastrar");
-  }}
-  onDelete={async (id: string) => {
-    await deletarServico(id); 
-  }}
-  onView={(servico) => setServicoVisualizar(servico)}
-  onStatusFilterChange={(status: StatusType | null) => {
-    setStatusFilter(status);
-  }}
-/>
-
+              servicos={servicosFiltrados}
+              clientes={clientes}    
+              statusFilter={statusFilter as StatusType | null}
+              onStatusChange={atualizarStatus}
+              onEdit={(servico: Servico) => {
+                setServicoAtual(servico);
+                setViewMode("cadastrar");
+              }}
+              onDelete={async (id: string) => {
+                await deletarServico(id);
+              }}
+              onView={(servico) => setServicoVisualizar(servico)}
+              onStatusFilterChange={(status: StatusType | null) => {
+                setStatusFilter(status);
+              }}
+            />
 
             {/* Modal visualização */}
             {servicoVisualizar && (
