@@ -43,34 +43,25 @@ export default function ServicosPage() {
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
       <div className="max-w-6xl mx-auto">
-
-        {/* Linha dos botões */}
+        {/* Botões */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex space-x-2">
-
             {viewMode === "ver" && (
               <>
-                <Button
-                  variant="solid"
-                  onClick={() => setViewMode("ver")}
-                  className="shadow-lg"
-                >
+                <Button variant="solid" onClick={() => setViewMode("ver")} className="shadow-lg">
                   Ver Serviços
                 </Button>
-
                 <Button
                   variant="solid"
                   onClick={() => {
                     setServicoAtual(criarServicoVazio());
                     setViewMode("cadastrar");
                   }}
-                  className=""
                 >
                   Cadastrar Serviço
                 </Button>
               </>
             )}
-
             {viewMode !== "ver" && (
               <Button
                 variant="outline"
@@ -82,7 +73,6 @@ export default function ServicosPage() {
                 ← Voltar
               </Button>
             )}
-
             {viewMode === "ver" && (
               <Button
                 variant="outline"
@@ -96,6 +86,7 @@ export default function ServicosPage() {
           </div>
         </div>
 
+        {/* Campo de busca */}
         {viewMode === "ver" && (
           <div className="mb-10">
             <Input
@@ -107,26 +98,28 @@ export default function ServicosPage() {
           </div>
         )}
 
+        {/* Conteúdo principal */}
         {viewMode === "ver" ? (
           <>
             <ServicoList
-              servicos={servicosFiltrados}
-              statusFilter={statusFilter as StatusType | null}
-              onStatusChange={atualizarStatus}
-              onEdit={(servico: Servico) => {
-                setServicoAtual(servico);
-                setViewMode("cadastrar");
-              }}
-              onDelete={(servicoId: string) => {
-                deletarServico(servicoId);
-              }}
-              onView={(servico) => setServicoVisualizar(servico)}
-              onStatusFilterChange={(status: StatusType | null) => {
-                setStatusFilter(status);
-              }}
-            />
+  servicos={servicosFiltrados}
+  statusFilter={statusFilter as StatusType | null}
+  onStatusChange={atualizarStatus}
+  onEdit={(servico: Servico) => {
+    setServicoAtual(servico);
+    setViewMode("cadastrar");
+  }}
+  onDelete={async (id: string) => {
+    await deletarServico(id); 
+  }}
+  onView={(servico) => setServicoVisualizar(servico)}
+  onStatusFilterChange={(status: StatusType | null) => {
+    setStatusFilter(status);
+  }}
+/>
 
-            {/* Modal simples para visualizar serviço */}
+
+            {/* Modal visualização */}
             {servicoVisualizar && (
               <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
                 <div className="bg-[#1e293b] p-6 rounded-lg max-w-md w-full space-y-4">
@@ -139,10 +132,7 @@ export default function ServicosPage() {
                     <p><strong>Observações:</strong> {servicoVisualizar.observacoes}</p>
                   )}
                   <div className="flex justify-end">
-                    <Button
-                      variant="outline"
-                      onClick={() => setServicoVisualizar(null)}
-                    >
+                    <Button variant="outline" onClick={() => setServicoVisualizar(null)}>
                       Fechar
                     </Button>
                   </div>

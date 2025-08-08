@@ -19,11 +19,11 @@ export const PRIORITY_OPTIONS = ["Baixa", "Média", "Alta"] as const;
 export type StatusType = typeof STATUS_OPTIONS[number];
 export type PriorityType = typeof PRIORITY_OPTIONS[number];
 
-// Interface principal do Serviço
+// Atualizando a interface Servico para incluir o campo 'dataCadastro'
 export interface Servico {
-  id?: string; // opcional para criação
+  id?: string;
   clienteId: string;
-  cliente?: string; // nome do cliente pode ser opcional
+  cliente?: string;
   veiculo?: string;
   descricao: string;
   finalizado: boolean;
@@ -32,11 +32,12 @@ export interface Servico {
   prioridade: PriorityType;
   valor?: string;
   pago: boolean;
-  data?: string; // ISO string, opcional
+  data?: string; // Data opcional, se necessário
+  dataCadastro?: string; // Campo para armazenar a data de cadastro
 }
 
 // Tipos para operações CRUD
-export interface IRegisterServiceData extends Omit<Servico, "id" | "data"> {
+export interface IRegisterServiceData extends Omit<Servico, "id" | "dataCadastro"> {
   data?: string; // opcional mesmo no registro
 }
 
@@ -72,7 +73,7 @@ export function createEmptyService(): Servico {
     prioridade: "Média",
     valor: "",
     pago: false,
-    data: new Date().toISOString(),
+    dataCadastro: new Date().toISOString(), // Definindo data de criação
   };
 }
 

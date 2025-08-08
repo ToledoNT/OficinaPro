@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ApiService } from "@/api/api-requests";
 import { Cliente, ViewMode } from "@/app/interfaces/clientes-interface";
@@ -7,14 +7,19 @@ import { criarClienteVazio, filtrarVeiculosVazios, normalizarCliente } from "../
 
 export const useClientes = () => {
   const router = useRouter();
+
+  // Estados principais
   const [viewMode, setViewMode] = useState<ViewMode>("ver");
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [clienteAtual, setClienteAtual] = useState<Cliente>(criarClienteVazio());
   const [clienteVisualizar, setClienteVisualizar] = useState<Cliente | null>(null);
   const [filtro, setFiltro] = useState("");
+  const [loadingDelete, setLoadingDelete] = useState(false);
 
-  const api = new ApiService(); // cria só uma vez
+  // Instância estável da API (não muda entre renders)
+  const api = useRef(new ApiService()).current;
 
+  // Carregar clientes uma única vez ao montar o hook
   useEffect(() => {
     const carregarClientes = async () => {
       try {
@@ -24,10 +29,15 @@ export const useClientes = () => {
         console.error("Erro ao carregar clientes:", error);
       }
     };
-
     carregarClientes();
-  }, []);
+  }, []); // vazio, pois api é estável
 
+  // Clientes filtrados pelo filtro de nome (sempre atualizado)
+  const clientesFiltrados = clientes.filter((c) =>
+    c.nome.toLowerCase().includes(filtro.toLowerCase())
+  );
+
+  // Função para salvar cliente (cadastrar ou editar)
   const salvarCliente = async () => {
     if (!clienteAtual.nome.trim()) {
       alert("O nome do cliente é obrigatório.");
@@ -45,6 +55,10 @@ export const useClientes = () => {
       if (viewMode === "cadastrar") {
         result = await api.registerCliente(clienteParaEnviar);
       } else if (viewMode === "editar") {
+        if (!clienteAtual.id) {
+          alert("ID do cliente inválido para atualização.");
+          return;
+        }
         result = await api.updateCliente(clienteAtual.id, clienteParaEnviar);
       } else {
         throw new Error("Modo inválido");
@@ -60,7 +74,9 @@ export const useClientes = () => {
         setClientes((prev) =>
           viewMode === "cadastrar"
             ? [...prev, normalizarCliente(result.data!)]
-            : prev.map((c) => (c.id === result.data!.id ? normalizarCliente(result.data!) : c))
+            : prev.map((c) =>
+                c.id === result.data!.id ? normalizarCliente(result.data!) : c
+              )
         );
 
         setClienteAtual(criarClienteVazio());
@@ -74,26 +90,28 @@ export const useClientes = () => {
     }
   };
 
+  // Função para deletar cliente
   const deletarCliente = async (id: string) => {
-    if (!confirm("Deseja realmente deletar este cliente?")) return;
-
+    console.log("deletarCliente chamado com id:", id);
+    setLoadingDelete(true);
     try {
       const result = await api.deleteCliente(id);
+      console.log("Resultado da API deleteCliente:", result);
 
       if (result.status) {
         setClientes((prev) => prev.filter((c) => c.id !== id));
+        alert("Cliente deletado com sucesso!");
+        if (clienteVisualizar?.id === id) setClienteVisualizar(null);
       } else {
         alert(`Erro ao deletar cliente: ${result.message || "Erro desconhecido."}`);
       }
     } catch (error) {
       console.error("Erro ao deletar cliente:", error);
       alert("Erro ao deletar cliente.");
+    } finally {
+      setLoadingDelete(false);
     }
   };
-
-  const clientesFiltrados = clientes.filter((c) =>
-    c.nome.toLowerCase().includes(filtro.toLowerCase())
-  );
 
   return {
     viewMode,
@@ -109,5 +127,6 @@ export const useClientes = () => {
     deletarCliente,
     clientesFiltrados,
     router,
+    loadingDelete,
   };
 };

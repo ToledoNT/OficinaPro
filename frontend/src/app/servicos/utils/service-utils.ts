@@ -11,7 +11,9 @@ export const criarServicoVazio = (): Servico => ({
   prioridade: "Média",
   valor: "",
   pago: false,
+  dataCadastro: new Date().toISOString(), 
 });
+
 
 export const STATUS_STYLES: Record<StatusType, string> = {
   "Em fila": "bg-gray-600 text-white",
