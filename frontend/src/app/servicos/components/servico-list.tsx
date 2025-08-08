@@ -1,83 +1,140 @@
-"use client";
+'use client';
 
+import { useState } from "react";
 import { Card, CardContent } from "@/app/clientes/components/ui/card";
+import { Button } from "@/app/clientes/components/ui/button";
 import {
   ServicoListProps,
-  STATUS_OPTIONS,
   StatusType,
   Servico,
+  STATUS_OPTIONS,
 } from "@/app/interfaces/service-interface";
 import { STATUS_STYLES } from "../utils/service-utils";
-import { Button } from "@/app/clientes/components/ui/button";
-import { useState } from "react";
+
+const formatDate = (date: string) => {
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  };
+  return new Date(date).toLocaleDateString("pt-BR", options);
+};
+
+type Props = ServicoListProps & {
+  onView: (servico: Servico) => void;
+  onDelete: (id: string) => Promise<void>;
+};
 
 export function ServicoList({
   servicos,
+  statusFilter,
+  onStatusChange,
   onEdit,
   onDelete,
   onView,
-  onStatusChange,
-}: ServicoListProps & {
-  onView: (servico: Servico) => void;
-  onDelete: (id: string) => void;
-}) {
-  const [statusFilter, setStatusFilter] = useState<StatusType | "">(""); // Estado para filtrar pelo status
+  onStatusFilterChange,
+}: Props) {
+  const [loadingDeleteId, setLoadingDeleteId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [servicoToDelete, setServicoToDelete] = useState<string | null>(null);
 
-  const handleStatusChange = (id: string, newStatus: string) => {
-    if (STATUS_OPTIONS.includes(newStatus as StatusType)) {
-      onStatusChange(id, newStatus as StatusType);
-    }
-  };
-
-  // Filtro de serviços pelo status (fora do lookup)
   const filteredServicos = statusFilter
     ? servicos.filter((servico) => servico.status === statusFilter)
     : servicos;
 
+  const handleDeleteClick = (id: string) => {
+    setServicoToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!servicoToDelete) return;
+
+    setLoadingDeleteId(servicoToDelete);
+    setError(null);
+
+    try {
+      await onDelete(servicoToDelete);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao excluir serviço");
+    } finally {
+      setShowDeleteModal(false);
+      setServicoToDelete(null);
+      setLoadingDeleteId(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {/* Filtro de Status - Fora do lookup */}
+      {/* Filtro de status */}
       <div className="flex justify-between items-center gap-4 mb-4">
-        <div className="flex-1">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as StatusType)}
-            className="w-40 p-1 rounded-md border border-gray-600 bg-[#0f203d] text-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          >
-            <option value="">Filtrar por Status</option>
-            {STATUS_OPTIONS.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          value={statusFilter || ""}
+          onChange={(e) => onStatusFilterChange(e.target.value as StatusType || null)}
+          className="w-48 p-2 rounded-md border border-gray-600 bg-[#0f203d] text-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        >
+          <option value="">Todos os Status</option>
+          {STATUS_OPTIONS.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* Lista de Serviços Filtrados */}
+      {/* Erro */}
+      {error && (
+        <div className="bg-red-800/80 text-red-100 p-3 rounded-md">
+          {error}
+        </div>
+      )}
+
+      {/* Modal de confirmação */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[#1e293b] p-6 rounded-lg border border-gray-700 max-w-md w-full">
+            <h3 className="text-lg font-bold mb-4">Confirmar exclusão</h3>
+            <p className="mb-6">Tem certeza que deseja excluir este serviço?</p>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={loadingDeleteId !== null}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="bg-red-600 hover:bg-red-700"
+                onClick={handleDeleteConfirm}
+                disabled={loadingDeleteId !== null}
+              >
+                {loadingDeleteId ? "Excluindo..." : "Confirmar"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lista de serviços */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredServicos.length > 0 ? (
           filteredServicos.map((servico) => (
-            <Card
-              key={servico.id}
-              className="bg-[#1e293b] border border-gray-700"
-            >
+            <Card key={servico.id} className="bg-[#1e293b] border border-gray-700">
               <CardContent className="p-4 space-y-2 text-sm">
-                <div>
-                  <p><strong>Cliente:</strong> {servico.cliente || "-"}</p>
-                  <p><strong>Veículo:</strong> {servico.veiculo || "-"}</p>
-                  <p className="flex items-center">
-                    <strong>Status:</strong>
-                    <span
-                      className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${STATUS_STYLES[servico.status]}`}
-                    >
-                      {servico.status}
-                    </span>
-                  </p>
-                </div>
-
+                <p><strong>Cliente:</strong> {servico.cliente || "-"}</p>
+                <p><strong>Veículo:</strong> {servico.veiculo || "-"}</p>
+                <p>
+                  <strong>Status:</strong>{" "}
+                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${STATUS_STYLES[servico.status]}`}>
+                    {servico.status}
+                  </span>
+                </p>
+                {servico.dataCadastro && (
+                  <p><strong>Data de Cadastro:</strong> {formatDate(servico.dataCadastro)}</p>
+                )}
                 <p><strong>Descrição:</strong> {servico.descricao}</p>
-
                 {servico.observacoes && (
                   <p><strong>Observações:</strong> {servico.observacoes}</p>
                 )}
@@ -86,9 +143,9 @@ export function ServicoList({
                   <select
                     value={servico.status}
                     onChange={(e) =>
-                      servico.id && handleStatusChange(servico.id, e.target.value)
+                      servico.id && onStatusChange(servico.id, e.target.value as StatusType)
                     }
-                    className="w-full p-2 rounded-md border border-gray-600 bg-[#0f203d] text-white text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full p-2 rounded-md border border-gray-600 bg-[#0f203d] text-white text-sm"
                   >
                     {STATUS_OPTIONS.map((status) => (
                       <option key={status} value={status}>
@@ -98,32 +155,27 @@ export function ServicoList({
                   </select>
                 </div>
 
-                {/* Botões com estilos solicitados */}
                 <div className="mt-4 flex justify-end gap-2">
-                  {/* Ver - Borda amarela, texto amarelo; hover fundo amarelo e texto branco */}
                   <Button
                     variant="outline"
                     onClick={() => onView(servico)}
-                    className="border border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-white transition px-3 py-1 text-sm"
+                    className="border border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-white transition"
                   >
                     Ver
                   </Button>
-
-                  {/* Editar - Azul sólido */}
                   <Button
                     onClick={() => onEdit(servico)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     Editar
                   </Button>
-
-                  {/* Deletar - Borda vermelha e texto branco */}
                   <Button
                     variant="outline"
-                    onClick={() => servico.id && onDelete(servico.id)}
-                    className="border border-red-500 text-white hover:bg-red-500 hover:text-white transition px-3 py-1 text-sm"
+                    onClick={() => servico.id && handleDeleteClick(servico.id)}
+                    className="border border-red-500 text-white hover:bg-red-500 hover:text-white transition"
+                    disabled={loadingDeleteId === servico.id}
                   >
-                    Deletar
+                    {loadingDeleteId === servico.id ? "Excluindo..." : "Deletar"}
                   </Button>
                 </div>
               </CardContent>

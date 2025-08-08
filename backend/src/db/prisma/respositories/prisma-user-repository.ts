@@ -24,7 +24,8 @@ export class PrismaClientRepository {
   
   async delete(id: string): Promise<ResponseTemplateInterface> {
     try {
-      await prisma.cliente.delete({ where: { id } });
+      const response =  await prisma.cliente.delete({ where: { id } });
+      console.log(response);
       return new ResponseTemplateModel(
         true,
         200,

@@ -55,11 +55,14 @@ export class ApiService {
   async deleteCliente(id: string): Promise<ApiResponseCliente> {
     try {
       const response = await this.api.delete<ApiResponseCliente>(`/client/deleteclient/${id}`);
+      console.log("Resposta da API:", response); 
       return response.data;
     } catch (error) {
+      console.error("Erro ao deletar cliente:", error);
       return this.handleError(error, "Erro ao deletar cliente");
     }
   }
+  
 
   async getServicos(): Promise<Servico[]> {
     try {
@@ -135,7 +138,7 @@ export class ApiService {
 
   async deleteService(id: string): Promise<ApiResponseCliente> {
     try {
-      const response = await this.api.delete<ApiResponseCliente>(`/client/deleteclient/${id}`);
+      const response = await this.api.delete<ApiResponseCliente>(`/service/deleteservice/${id}`);
       return response.data;
     } catch (error) {
       return this.handleError(error, "Erro ao deletar cliente");

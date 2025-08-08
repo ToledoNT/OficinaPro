@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { DeleteClient } from "../../use-case/cliente/delete-client-use-cases";
 
-export class DeleteClienteController {
+export class DeleteServiceController {
   async handle(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     if (id) {
