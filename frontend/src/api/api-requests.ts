@@ -4,7 +4,7 @@ import {
   Cliente,
   IUpdateClienteData,
 } from "@/app/interfaces/clientes-interface";
-import { ApiResponseCliente, ApiResponseClientes } from "@/app/interfaces/response-interface";
+import { ApiResponseCliente, ApiResponseClientes, ApiResponseDeleteResponse } from "@/app/interfaces/response-interface";
 import { IRegisterServiceData, IUpdateServiceData, Servico } from "@/app/interfaces/service-interface";
 
 const apiBaseURL = "http://localhost:4001/api";
@@ -52,11 +52,11 @@ export class ApiService {
     }
   }
 
-  async deleteCliente(id: string): Promise<ApiResponseCliente> {
+  async deleteCliente(id: string): Promise<ApiResponseDeleteResponse> {
     try {
-      const response = await this.api.delete<ApiResponseCliente>(`/client/deleteclient/${id}`);
+      const response = await this.api.delete<ApiResponseDeleteResponse>(`/client/deleteclient/${id}`);
       console.log("Resposta da API:", response); 
-      return response.data;
+      return response.data;  // aqui retorna só o corpo, já tipado ApiResponseDelete
     } catch (error) {
       console.error("Erro ao deletar cliente:", error);
       return this.handleError(error, "Erro ao deletar cliente");

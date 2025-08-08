@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import { DeleteClient } from "../../use-case/cliente/delete-client-use-cases";
+import { DeleteService } from "../../use-case/service/delete-service-use-case";
 
 export class DeleteServiceController {
   async handle(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     if (id) {
-      const deleteUser =  await new DeleteClient().execute(id);
+      const deleteUser =  await new DeleteService().execute(id);
       if (deleteUser) {
         res.status(200).json({ mensagem: "Usuário deletado com sucesso via ID", dados: deleteUser });
         return;

@@ -3,10 +3,21 @@ import { Cliente } from "./clientes-interface";
 export interface ApiResponse<T> {
   status: boolean;
   code: number;
-  message: string;
-  data?: T; // data opcional, genérico
+  message: string;  
+  data?: T;
+}
+export interface ApiResponseDeleteResponse {
+  status: boolean;
+  mensagem?: string;
+  dados?: null | Record<string, unknown>;
 }
 
-// Usos específicos para Clientes e listas de Clientes
+export interface ApiResponseVoid {
+  status: boolean;
+  code: number;
+  message: string; 
+}
+
 export type ApiResponseCliente = ApiResponse<Cliente>;
 export type ApiResponseClientes = ApiResponse<Cliente[]>;
+

@@ -21,21 +21,18 @@ export class PrismaServiceRepository {
       return new ResponseTemplateModel(false, 500, "Erro ao criar serviço", []);
     }
   }
-
+  
   async update(id: string, data: Partial<IUpdateService>): Promise<ResponseTemplateInterface> {
     try {
       const payload: any = { ...data };
   
-      // Garante que não vamos enviar cliente como string vazia
       if (payload.clienteId) {
         payload.cliente = { connect: { id: payload.clienteId } };
+        delete payload.clienteId; // Remove clienteId porque não existe no modelo Prisma
       }
   
-      // Remover campos que não fazem parte da estrutura esperada do Prisma
-      delete payload.clienteId;
-      delete payload.cliente; // caso cliente tenha vindo como string
-      if (data.clienteId) {
-        payload.cliente = { connect: { id: data.clienteId } };
+      if ('data' in payload) {
+        delete payload.data;
       }
   
       const response = await prisma.service.update({
@@ -49,7 +46,6 @@ export class PrismaServiceRepository {
       return new ResponseTemplateModel(false, 500, "Erro ao atualizar serviço", []);
     }
   }
-  
   
   async delete(id: string): Promise<ResponseTemplateInterface> {
     try {
