@@ -24,19 +24,27 @@ export class PrismaClientRepository {
   
   async delete(id: string): Promise<ResponseTemplateInterface> {
     try {
-      const response =  await prisma.cliente.delete({ where: { id } });
-      console.log(response);
+      await prisma.service.deleteMany({ where: { clienteId: id } });
+  
+      const response = await prisma.cliente.delete({ where: { id } });
+  
       return new ResponseTemplateModel(
         true,
         200,
         "Cliente deletado com sucesso",
         null
       );
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Erro ao deletar cliente:", error);
+  
+      if (error.code === "P2025") {
+        return new ResponseTemplateModel(false, 404, "Cliente não encontrado para exclusão", []);
+      }
+  
       return new ResponseTemplateModel(false, 500, "Erro ao deletar cliente", []);
     }
   }
-
+  
   async getAll(): Promise<ResponseTemplateInterface> {
     try {
       const response = await prisma.cliente.findMany({});

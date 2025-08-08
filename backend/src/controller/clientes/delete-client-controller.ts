@@ -5,9 +5,7 @@ export class DeleteClienteController {
   async handle(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
     if (id) {
-      console.log(id);
       const deleteUser =  await new DeleteClient().execute(id);
-      console.log(deleteUser);
       if (deleteUser) {
         res.status(200).json({ mensagem: "Usuário deletado com sucesso via ID", dados: deleteUser });
         return;

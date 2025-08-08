@@ -1,3 +1,5 @@
+// service-interface.ts
+
 import { Cliente } from "./clientes-interface";
 
 // Opções de status como constante com const assertion
@@ -19,12 +21,12 @@ export const PRIORITY_OPTIONS = ["Baixa", "Média", "Alta"] as const;
 export type StatusType = typeof STATUS_OPTIONS[number];
 export type PriorityType = typeof PRIORITY_OPTIONS[number];
 
-// Atualizando a interface Servico para incluir o campo 'dataCadastro'
+// Interface do Serviço
 export interface Servico {
   id?: string;
   clienteId: string;
-  cliente?: string;
-  veiculo?: string;
+  cliente?: string;  // nome do cliente, opcional, preenchido no frontend
+  veiculo?: string;  // placa do veículo escolhido
   descricao: string;
   finalizado: boolean;
   status: StatusType;
@@ -33,22 +35,22 @@ export interface Servico {
   valor?: string;
   pago: boolean;
   data?: string; // Data opcional, se necessário
-  dataCadastro?: string; // Campo para armazenar a data de cadastro
+  dataCadastro?: string; // Data de criação
 }
 
 // Tipos para operações CRUD
 export interface IRegisterServiceData extends Omit<Servico, "id" | "dataCadastro"> {
-  data?: string; // opcional mesmo no registro
+  data?: string;
 }
 
 export interface IUpdateServiceData extends Partial<Servico> {
-  id: string; // obrigatório para update
+  id: string;
 }
 
 // Tipo para modo de visualização
 export type ViewMode = "ver" | "cadastrar" | "editar";
 
-// Estilos para cada status
+// Estilos para status (CSS classes)
 export const STATUS_STYLES: Record<StatusType, string> = {
   "Em fila": "bg-gray-600 text-white",
   "Em andamento": "bg-blue-500 text-white",
@@ -60,7 +62,7 @@ export const STATUS_STYLES: Record<StatusType, string> = {
   "Cancelado": "bg-red-600 text-white",
 };
 
-// Função para criar um serviço vazio com valores padrão
+// Função para criar serviço vazio com valores padrão
 export function createEmptyService(): Servico {
   return {
     clienteId: "",
@@ -73,7 +75,7 @@ export function createEmptyService(): Servico {
     prioridade: "Média",
     valor: "",
     pago: false,
-    dataCadastro: new Date().toISOString(), // Definindo data de criação
+    dataCadastro: new Date().toISOString(),
   };
 }
 
@@ -94,6 +96,6 @@ export interface ServicoListProps {
   statusFilter: StatusType | null;
   onStatusChange: (id: string, status: StatusType) => void;
   onEdit: (servico: Servico) => void;
-  onDelete?: (servicoId: string) => void; // Torna opcional para compatibilidade
+  onDelete?: (servicoId: string) => void;
   onStatusFilterChange: (status: StatusType | null) => void;
 }

@@ -5,7 +5,7 @@ import { PrismaServiceRepository } from "../../db/prisma/respositories/prisma-se
 
 export class DeleteClient {
   async execute(id: string): Promise<ResponseTemplateInterface> {
-    const responseCreate = await new PrismaServiceRepository().delete(id)
+    const responseCreate = await new PrismaClientRepository().delete(id)
     if (!responseCreate.status) {
       await new CreateLog().execute(responseCreate);
     }

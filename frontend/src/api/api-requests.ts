@@ -98,12 +98,15 @@ export class ApiService {
       if (!dados.id) {
         throw new Error("ID do serviço é obrigatório para atualização.");
       }
-      const { id, ...dataToUpdate } = dados;
+      const { id,...dataToUpdate } = dados;
+      console.log(dataToUpdate);
+  
       const response = await this.api.put<{
         status: boolean;
         message?: string;
         data?: Servico;
       }>(`/service/updateservice/${id}`, dataToUpdate);
+  
       const { status, message } = response.data;
   
       if (status) {
@@ -126,6 +129,7 @@ export class ApiService {
       };
     }
   }
+  
   
   async registerService(data: IRegisterServiceData): Promise<ApiResponseCliente> {
     try {

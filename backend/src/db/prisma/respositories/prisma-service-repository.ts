@@ -26,11 +26,16 @@ export class PrismaServiceRepository {
     try {
       const payload: any = { ...data };
   
-      delete payload.cliente;
-  
+      // Garante que não vamos enviar cliente como string vazia
       if (payload.clienteId) {
         payload.cliente = { connect: { id: payload.clienteId } };
-        delete payload.clienteId;
+      }
+  
+      // Remover campos que não fazem parte da estrutura esperada do Prisma
+      delete payload.clienteId;
+      delete payload.cliente; // caso cliente tenha vindo como string
+      if (data.clienteId) {
+        payload.cliente = { connect: { id: data.clienteId } };
       }
   
       const response = await prisma.service.update({
@@ -45,9 +50,10 @@ export class PrismaServiceRepository {
     }
   }
   
+  
   async delete(id: string): Promise<ResponseTemplateInterface> {
     try {
-      await prisma.service.delete({
+   const response =  await prisma.service.delete({
         where: { id },
       });
       return new ResponseTemplateModel(
@@ -56,11 +62,18 @@ export class PrismaServiceRepository {
         "Serviço deletado com sucesso",
         null
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao deletar serviço:", error);
+  
+      if (error.code === "P2025") {
+        // Registro não encontrado
+        return new ResponseTemplateModel(false, 404, "Serviço não encontrado para exclusão", []);
+      }
+  
       return new ResponseTemplateModel(false, 500, "Erro ao deletar serviço", []);
     }
   }
+  
   
   async getAll(): Promise<ResponseTemplateInterface> {
     try {
