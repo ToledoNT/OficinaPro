@@ -56,7 +56,7 @@ export default function Home() {
           color="from-green-500 to-emerald-600"
         />
         <ModuleButton
-          href="/dividas"
+          href="/contas"
           icon="💰"
           title="Contas"
           color="from-rose-500 to-pink-600"

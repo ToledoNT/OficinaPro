@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { Input } from '../clientes/components/ui/input';
 import { Button } from '../clientes/components/ui/button';
 import { ContaCard } from './components/conta-card';
-import { ContaForm, Conta } from './components/conta-form';
+import { Conta, ContaForm } from './components/conta-form';
+import { useClientes, useServicos } from './hook/conta-hook';
 
-type ViewMode = '' | 'lista' | 'formulario';
+type ViewMode = '' | 'lista' | 'formulario' | 'visualizar';
 
 const criarContaVazia = (): Conta => ({
   id: 0,
@@ -25,10 +26,16 @@ const criarContaVazia = (): Conta => ({
 
 export default function Contas() {
   const router = useRouter();
-  const [viewMode, setViewMode] = useState<ViewMode>(''); // estado inicial vazio - não mostra nada
+
+  const [viewMode, setViewMode] = useState<ViewMode>('');
   const [contas, setContas] = useState<Conta[]>([]);
   const [contaAtual, setContaAtual] = useState<Conta>(criarContaVazia());
+
   const [filtro, setFiltro] = useState('');
+  const [statusFiltro, setStatusFiltro] = useState<'todos' | 'pagas' | 'naoPagas'>('todos');
+
+  const { clientes, loading: loadingClientes, error: errorClientes } = useClientes();
+  const { servicos, loading: loadingServicos, error: errorServicos } = useServicos();
 
   function salvarConta() {
     if (!contaAtual.descricao.trim()) {
@@ -71,6 +78,11 @@ export default function Contas() {
     }
   };
 
+  const visualizarConta = (conta: Conta) => {
+    setContaAtual(conta);
+    setViewMode('visualizar');
+  };
+
   const handleChange = <K extends keyof Conta>(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
     field: K
@@ -88,15 +100,29 @@ export default function Contas() {
     }));
   };
 
+  const handleChangeValue = <K extends keyof Conta>(field: K, value: Conta[K]) => {
+    setContaAtual((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   const limparFormulario = () => {
     setContaAtual(criarContaVazia());
     setViewMode('');
   };
 
-  const contasFiltradas = contas.filter((c) =>
-    [c.cliente, c.descricao, c.valor, c.categoria]
-      .some((campo) => campo.toLowerCase().includes(filtro.toLowerCase()))
-  );
+  // Filtra contas pelo filtro de texto + filtro de status
+  const contasFiltradas = contas.filter((c) => {
+    const textoMatch = [c.cliente, c.descricao, c.valor, c.categoria]
+      .some((campo) => campo.toLowerCase().includes(filtro.toLowerCase()));
+
+    let statusMatch = true;
+    if (statusFiltro === 'pagas') statusMatch = c.pago === true;
+    else if (statusFiltro === 'naoPagas') statusMatch = c.pago === false;
+
+    return textoMatch && statusMatch;
+  });
 
   const formatarValor = (valor: string) => {
     const num = Number(valor.replace(',', '.'));
@@ -118,6 +144,7 @@ export default function Contas() {
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
       <div className="max-w-6xl mx-auto">
+        {/* Botões principais */}
         <div className="flex flex-wrap gap-4 mb-4">
           <Button onClick={() => setViewMode('lista')} className="bg-blue-600 hover:bg-blue-700">
             Ver Contas
@@ -140,8 +167,10 @@ export default function Contas() {
           </Button>
         </div>
 
+        {/* Lista de contas com filtros */}
         {viewMode === 'lista' && (
           <>
+            {/* Filtros */}
             <div className="mb-4 flex flex-wrap items-center gap-6">
               <Input
                 value={filtro}
@@ -149,6 +178,21 @@ export default function Contas() {
                 placeholder="Buscar cliente, descrição, valor ou categoria..."
                 className={`${inputClass} max-w-sm`}
               />
+
+              {/* Novo select lookup para filtro de status */}
+              <select
+                className={`${inputClass} py-2 px-3 rounded max-w-xs`}
+                value={statusFiltro}
+                onChange={(e) =>
+                  setStatusFiltro(e.target.value as 'todos' | 'pagas' | 'naoPagas')
+                }
+              >
+                <option value="todos">Todos</option>
+                <option value="pagas">Pagas</option>
+                <option value="naoPagas">Não Pagas</option>
+              </select>
+
+              {/* Totais */}
               <div className="space-x-4 text-gray-300">
                 <span>
                   <strong>Total a pagar:</strong>{' '}
@@ -176,6 +220,7 @@ export default function Contas() {
                     key={c.id}
                     conta={c}
                     formatarValor={formatarValor}
+                    onVer={() => visualizarConta(c)}
                     onEditar={(conta) => {
                       setContaAtual({
                         ...criarContaVazia(),
@@ -187,6 +232,7 @@ export default function Contas() {
                       setViewMode('formulario');
                     }}
                     onExcluir={deletarConta}
+                    loading={false}
                   />
                 ))}
               </div>
@@ -194,19 +240,55 @@ export default function Contas() {
           </>
         )}
 
+        {/* Formulário */}
         {viewMode === 'formulario' && (
-          <ContaForm
-            conta={contaAtual}
-            inputClass={inputClass}
-            onChange={handleChange}
-            onTogglePago={(checked) => setContaAtual((prev) => ({ ...prev, pago: checked }))}
-            onToggleTemServico={(checked) => setContaAtual((prev) => ({ ...prev, temServico: checked }))}
-            onCancelar={limparFormulario}
-            onSalvar={salvarConta}
-          />
+          <>
+            {(loadingClientes || loadingServicos) ? (
+              <p>Carregando dados...</p>
+            ) : errorClientes ? (
+              <p className="text-red-500">{errorClientes}</p>
+            ) : errorServicos ? (
+              <p className="text-red-500">{errorServicos}</p>
+            ) : (
+              <ContaForm
+                conta={contaAtual}
+                clientes={clientes}
+                servicos={servicos}
+                inputClass={inputClass}
+                onChange={handleChange}
+                onChangeValue={handleChangeValue}
+                onTogglePago={(checked) => setContaAtual((prev) => ({ ...prev, pago: checked }))}
+                onToggleTemServico={(checked) => setContaAtual((prev) => ({ ...prev, temServico: checked }))}
+                onCancelar={limparFormulario}
+                onSalvar={salvarConta}
+              />
+            )}
+          </>
         )}
 
-        {/* Se viewMode vazio, não mostra nada */}
+        {/* Visualizar */}
+        {viewMode === 'visualizar' && (
+          <div className="bg-[#1e293b] p-4 rounded border border-gray-700 text-gray-300 max-w-4xl mx-auto">
+            <h2 className="text-white text-2xl mb-4">Visualizar Conta</h2>
+            <p><strong>Descrição:</strong> {contaAtual.descricao}</p>
+            <p><strong>Cliente:</strong> {contaAtual.cliente}</p>
+            <p><strong>Categoria:</strong> {contaAtual.categoria}</p>
+            <p><strong>Tipo:</strong> {contaAtual.tipo}</p>
+            <p><strong>Valor:</strong> {formatarValor(contaAtual.valor)}</p>
+            <p><strong>Pago:</strong> {contaAtual.pago ? 'Sim' : 'Não'}</p>
+            <p><strong>Data de Pagamento:</strong> {contaAtual.dataPagamento}</p>
+            <p><strong>Observações:</strong> {contaAtual.observacoes}</p>
+
+            <div className="mt-4 flex gap-3">
+              <Button
+                onClick={() => setViewMode('lista')}
+                className="bg-blue-600 hover:bg-blue-700 text-xs px-3"
+              >
+                Voltar
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
