@@ -30,31 +30,28 @@ export const ClienteList = ({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [clienteToDelete, setClienteToDelete] = useState<string | null>(null);
 
+  // Estado para controlar se vai exibir os clientes
+  const [mostrarClientes, setMostrarClientes] = useState(false);
+
   const handleDeleteClick = (id: string) => {
     if (!id) {
-      console.error('ID inválido recebido:', id);
       setError("ID do cliente inválido");
       return;
     }
-    
     setClienteToDelete(id);
     setShowDeleteModal(true);
   };
 
   const handleDeleteConfirm = async () => {
     if (!clienteToDelete) return;
-    
-    console.log('[1] Iniciando exclusão para ID:', clienteToDelete);
     setLoadingDeleteId(clienteToDelete);
     setError(null);
 
     try {
-      console.log('[2] Chamando API para ID:', clienteToDelete);
       await onDeleteCliente(clienteToDelete);
-      console.log('[3] Exclusão concluída com sucesso');
     } catch (err) {
-      console.error('[ERRO] Falha na exclusão:', err);
-      const errorMessage = err instanceof Error ? err.message : "Erro ao excluir cliente";
+      const errorMessage =
+        err instanceof Error ? err.message : "Erro ao excluir cliente";
       setError(errorMessage);
     } finally {
       setLoadingDeleteId(null);
@@ -66,24 +63,28 @@ export const ClienteList = ({
   const handleDeleteCancel = () => {
     setShowDeleteModal(false);
     setClienteToDelete(null);
-    console.log('Exclusão cancelada pelo usuário');
   };
 
   return (
     <div className="space-y-6 p-4">
       {/* Barra de ações */}
       <div className="flex flex-wrap gap-4">
-        <Button className="bg-blue-600 hover:bg-blue-700 shadow">
+        <Button
+          className="bg-blue-600 hover:bg-blue-700 shadow"
+          onClick={() => setMostrarClientes(true)}
+        >
           Ver Clientes
         </Button>
-        <Button 
+
+        <Button
           className="bg-green-600 hover:bg-green-700 shadow"
           onClick={onAddCliente}
         >
           Cadastrar Cliente
         </Button>
-        <Button 
-          variant="outline" 
+
+        <Button
+          variant="outline"
           onClick={onBackToHome}
           className="hover:bg-gray-700"
         >
@@ -92,12 +93,14 @@ export const ClienteList = ({
       </div>
 
       {/* Campo de busca */}
-      <Input
-        value={filtro}
-        onChange={(e) => setFiltro(e.target.value)}
-        placeholder="Buscar cliente por nome..."
-        className="bg-[#1e293b] border-gray-600 text-white max-w-md"
-      />
+      {mostrarClientes && (
+        <Input
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+          placeholder="Buscar cliente por nome..."
+          className="bg-[#1e293b] border-gray-600 text-white max-w-md"
+        />
+      )}
 
       {/* Mensagem de erro */}
       {error && (
@@ -113,14 +116,14 @@ export const ClienteList = ({
             <h3 className="text-lg font-bold mb-4">Confirmar exclusão</h3>
             <p className="mb-6">Tem certeza que deseja excluir este cliente?</p>
             <div className="flex justify-end gap-3">
-              <Button 
+              <Button
                 variant="outline"
                 onClick={handleDeleteCancel}
                 disabled={loadingDeleteId !== null}
               >
                 Cancelar
               </Button>
-              <Button 
+              <Button
                 className="bg-red-600 hover:bg-red-700"
                 onClick={handleDeleteConfirm}
                 disabled={loadingDeleteId !== null}
@@ -132,25 +135,27 @@ export const ClienteList = ({
         </div>
       )}
 
-      {/* Lista de clientes */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {clientes.length === 0 ? (
-          <p className="text-gray-400 col-span-full text-center py-8">
-            Nenhum cliente encontrado
-          </p>
-        ) : (
-          clientes.map((cliente) => (
-            <ClienteCard
-              key={cliente.id}
-              cliente={cliente}
-              onView={() => onViewCliente(cliente)}
-              onEdit={() => onEditCliente(cliente)}
-              onDelete={() => handleDeleteClick(cliente.id)}
-              loading={loadingDeleteId === cliente.id}
-            />
-          ))
-        )}
-      </div>
+      {/* Lista de clientes (aparece só depois de clicar no botão) */}
+      {mostrarClientes && (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {clientes.length === 0 ? (
+            <p className="text-gray-400 col-span-full text-center py-8">
+              Nenhum cliente encontrado
+            </p>
+          ) : (
+            clientes.map((cliente) => (
+              <ClienteCard
+                key={cliente.id}
+                cliente={cliente}
+                onView={() => onViewCliente(cliente)}
+                onEdit={() => onEditCliente(cliente)}
+                onDelete={() => handleDeleteClick(cliente.id)}
+                loading={loadingDeleteId === cliente.id}
+              />
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -8,11 +8,11 @@ export interface Endereco {
 }
 
 export interface Veiculo {
-  placa: string;
+  placa?: string;
   modelo: string;
-  ano: string;
-  cor: string;
-  chassi: string;
+  ano?: string;
+  cor?: string;
+  chassi?: string;
 }
 
 export interface Cliente {

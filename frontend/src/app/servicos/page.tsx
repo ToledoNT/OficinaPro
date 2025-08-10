@@ -30,6 +30,7 @@ export default function ServicosPage() {
     criarServicoVazio,
   } = useServicos();
 
+  const [mostrarServicos, setMostrarServicos] = useState(false);
   const [servicoVisualizar, setServicoVisualizar] = useState<Servico | null>(null);
 
   const handleSave = async (servico: Servico) => {
@@ -48,7 +49,14 @@ export default function ServicosPage() {
           <div className="flex space-x-2">
             {viewMode === "ver" && (
               <>
-                <Button variant="solid" onClick={() => setViewMode("ver")} className="shadow-lg">
+                <Button
+                  variant="solid"
+                  onClick={() => {
+                    setMostrarServicos(true);
+                    setViewMode("ver");
+                  }}
+                  className="shadow-lg"
+                >
                   Ver Serviços
                 </Button>
                 <Button
@@ -68,6 +76,7 @@ export default function ServicosPage() {
                 onClick={() => {
                   setServicoAtual(criarServicoVazio());
                   setViewMode("ver");
+                  setMostrarServicos(false);
                 }}
               >
                 ← Voltar
@@ -87,7 +96,7 @@ export default function ServicosPage() {
         </div>
 
         {/* Campo de busca */}
-        {viewMode === "ver" && (
+        {mostrarServicos && viewMode === "ver" && (
           <div className="mb-10">
             <Input
               value={filtro}
@@ -99,7 +108,7 @@ export default function ServicosPage() {
         )}
 
         {/* Conteúdo principal */}
-        {viewMode === "ver" ? (
+        {mostrarServicos && viewMode === "ver" ? (
           <>
             <ServicoList
               servicos={servicosFiltrados}
@@ -141,16 +150,19 @@ export default function ServicosPage() {
             )}
           </>
         ) : (
-          <ServicoForm
-            servico={servicoAtual}
-            clientes={clientes}
-            onSave={handleSave}
-            onCancel={() => {
-              setServicoAtual(criarServicoVazio());
-              setViewMode("ver");
-            }}
-            loading={loading}
-          />
+          viewMode !== "ver" && (
+            <ServicoForm
+              servico={servicoAtual}
+              clientes={clientes}
+              onSave={handleSave}
+              onCancel={() => {
+                setServicoAtual(criarServicoVazio());
+                setViewMode("ver");
+                setMostrarServicos(true);
+              }}
+              loading={loading}
+            />
+          )
         )}
       </div>
     </div>

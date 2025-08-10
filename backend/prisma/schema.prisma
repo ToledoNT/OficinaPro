@@ -31,11 +31,11 @@ type Endereco {
 }
 
 type Veiculo {
-  placa  String
+  placa  String?
   modelo String
-  ano    String
-  cor    String
-  chassi String
+  ano    String?
+  cor    String?
+  chassi String?
 }
 
 model Service {

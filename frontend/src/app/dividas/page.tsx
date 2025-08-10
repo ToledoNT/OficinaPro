@@ -3,103 +3,134 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '../clientes/components/ui/input';
-import { Label } from '../clientes/components/ui/label';
-import { Textarea } from '../clientes/components/ui/textarea';
 import { Button } from '../clientes/components/ui/button';
-import { Switch } from '../clientes/components/ui/switch';
-import { Card, CardContent } from '../clientes/components/ui/card';
+import { ContaCard } from './components/conta-card';
+import { ContaForm, Conta } from './components/conta-form';
 
-interface Divida {
-  id: number;
-  data: string;
-  cliente: string;
-  descricao: string;
-  valor: string;
-  pago: boolean;
-  observacoes: string;
-}
+type ViewMode = '' | 'lista' | 'formulario';
 
-type ViewMode = 'ver' | 'cadastrar';
+const criarContaVazia = (): Conta => ({
+  id: 0,
+  dataPagamento: '',
+  cliente: '',
+  descricao: '',
+  categoria: 'Serviço',
+  tipo: 'A pagar',
+  valor: '',
+  pago: false,
+  observacoes: '',
+  temServico: false,
+  servicoVinculado: '',
+});
 
-export default function Dividas() {
+export default function Contas() {
   const router = useRouter();
-  const [viewMode, setViewMode] = useState<ViewMode>('ver');
-  const [dividas, setDividas] = useState<Divida[]>([]);
-  const [dividaAtual, setDividaAtual] = useState<Divida>(criarDividaVazia());
+  const [viewMode, setViewMode] = useState<ViewMode>(''); // estado inicial vazio - não mostra nada
+  const [contas, setContas] = useState<Conta[]>([]);
+  const [contaAtual, setContaAtual] = useState<Conta>(criarContaVazia());
   const [filtro, setFiltro] = useState('');
 
-  function criarDividaVazia(): Divida {
-    return {
-      id: Date.now(),
-      data: '',
-      cliente: '',
-      descricao: '',
-      valor: '',
-      pago: false,
-      observacoes: '',
-    };
-  }
-
-  function salvarDivida() {
-    if (!dividaAtual.descricao.trim()) {
-      alert('A descrição da dívida é obrigatória.');
+  function salvarConta() {
+    if (!contaAtual.descricao.trim()) {
+      alert('A descrição da conta é obrigatória.');
+      return;
+    }
+    if (!contaAtual.cliente.trim()) {
+      alert('O nome do cliente é obrigatório.');
+      return;
+    }
+    if (contaAtual.valor && Number(contaAtual.valor) < 0) {
+      alert('O valor não pode ser negativo.');
+      return;
+    }
+    if (!contaAtual.dataPagamento) {
+      alert('A data de pagamento é obrigatória.');
+      return;
+    }
+    if (contaAtual.temServico && !contaAtual.servicoVinculado.trim()) {
+      alert('Você selecionou que tem serviço, então vincule o serviço.');
       return;
     }
 
-    setDividas((prev) => {
-      const existe = prev.some((d) => d.id === dividaAtual.id);
-      return existe
-        ? prev.map((d) => (d.id === dividaAtual.id ? dividaAtual : d))
-        : [...prev, dividaAtual];
+    setContas((prev) => {
+      if (contaAtual.id === 0) {
+        return [...prev, { ...contaAtual, id: Date.now() }];
+      } else {
+        return prev.map((c) => (c.id === contaAtual.id ? contaAtual : c));
+      }
     });
 
-    alert('Dívida salva!');
-    setDividaAtual(criarDividaVazia());
-    setViewMode('ver');
+    alert('Conta salva com sucesso!');
+    setContaAtual(criarContaVazia());
+    setViewMode('lista');
   }
 
-  const deletarDivida = (id: number) => {
-    if (confirm('Deseja realmente deletar esta dívida?')) {
-      setDividas((prev) => prev.filter((d) => d.id !== id));
+  const deletarConta = (id: number) => {
+    if (confirm('Deseja realmente excluir esta conta?')) {
+      setContas((prev) => prev.filter((c) => c.id !== id));
     }
   };
 
-  const handleChange = <K extends keyof Divida>(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  const handleChange = <K extends keyof Conta>(
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
     field: K
   ) => {
-    setDividaAtual((prev) => ({ ...prev, [field]: e.target.value }));
+    let value: string | boolean =
+      e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
+
+    if (field === 'valor' && typeof value === 'string') {
+      value = value.replace(',', '.');
+    }
+
+    setContaAtual((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const dividasFiltradas = dividas.filter((d) =>
-    d.cliente.toLowerCase().includes(filtro.toLowerCase())
+  const limparFormulario = () => {
+    setContaAtual(criarContaVazia());
+    setViewMode('');
+  };
+
+  const contasFiltradas = contas.filter((c) =>
+    [c.cliente, c.descricao, c.valor, c.categoria]
+      .some((campo) => campo.toLowerCase().includes(filtro.toLowerCase()))
   );
 
-  // -------- Ajuste aqui --------
+  const formatarValor = (valor: string) => {
+    const num = Number(valor.replace(',', '.'));
+    if (isNaN(num)) return valor;
+    return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const totalPagar = contas
+    .filter((c) => c.tipo === 'A pagar' && !c.pago)
+    .reduce((acc, cur) => acc + Number(cur.valor || 0), 0);
+  const totalReceber = contas
+    .filter((c) => c.tipo === 'A receber' && !c.pago)
+    .reduce((acc, cur) => acc + Number(cur.valor || 0), 0);
+  const totalPago = contas.filter((c) => c.pago).reduce((acc, cur) => acc + Number(cur.valor || 0), 0);
+
   const inputClass =
     'bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 caret-white focus:outline-none focus:ring-2 focus:ring-blue-500';
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
       <div className="max-w-6xl mx-auto">
-        {/* Botões de ação */}
         <div className="flex flex-wrap gap-4 mb-4">
-          <Button
-            onClick={() => setViewMode('ver')}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            Ver Dívidas
+          <Button onClick={() => setViewMode('lista')} className="bg-blue-600 hover:bg-blue-700">
+            Ver Contas
           </Button>
           <Button
             onClick={() => {
-              setDividaAtual(criarDividaVazia());
-              setViewMode('cadastrar');
+              setContaAtual(criarContaVazia());
+              setViewMode('formulario');
             }}
             className="bg-green-600 hover:bg-green-700"
           >
-            Cadastrar Dívida
+            Cadastrar Conta
           </Button>
-          {/* Botão Voltar para Início */}
           <Button
             variant="outline"
             className="border border-gray-500 text-gray-200 hover:bg-gray-700"
@@ -109,162 +140,73 @@ export default function Dividas() {
           </Button>
         </div>
 
-        {/* Campo de busca */}
-        {viewMode === 'ver' && (
-          <div className="mb-8">
-            <Input
-              value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
-              placeholder="Buscar cliente..."
-              className={inputClass + ' max-w-sm'}
-            />
-          </div>
-        )}
+        {viewMode === 'lista' && (
+          <>
+            <div className="mb-4 flex flex-wrap items-center gap-6">
+              <Input
+                value={filtro}
+                onChange={(e) => setFiltro(e.target.value)}
+                placeholder="Buscar cliente, descrição, valor ou categoria..."
+                className={`${inputClass} max-w-sm`}
+              />
+              <div className="space-x-4 text-gray-300">
+                <span>
+                  <strong>Total a pagar:</strong>{' '}
+                  {totalPagar.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+                <span>
+                  <strong>Total a receber:</strong>{' '}
+                  {totalReceber.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+                <span>
+                  <strong>Total pago:</strong>{' '}
+                  {totalPago.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+              </div>
+            </div>
 
-        {/* Lista de dívidas */}
-        {viewMode === 'ver' && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {dividasFiltradas.length === 0 ? (
-              <p className="text-gray-400">Nenhuma dívida encontrada.</p>
+            <p className="mb-4 text-gray-300">Contas encontradas: {contasFiltradas.length}</p>
+
+            {contasFiltradas.length === 0 ? (
+              <p className="text-gray-400">Nenhuma conta encontrada.</p>
             ) : (
-              dividasFiltradas.map((d) => (
-                <Card key={d.id} className="bg-[#1e293b] border border-gray-700">
-                  <CardContent className="p-4 space-y-2">
-                    <h3 className="text-lg font-semibold">{d.cliente}</h3>
-                    <p>
-                      <strong>Data:</strong> {d.data}
-                    </p>
-                    <p>
-                      <strong>Descrição:</strong> {d.descricao}
-                    </p>
-                    <p>
-                      <strong>Valor:</strong> R$ {d.valor}
-                    </p>
-                    <p>
-                      <strong>Pago:</strong> {d.pago ? 'Sim' : 'Não'}
-                    </p>
-                    <p className="text-sm text-gray-400">{d.observacoes}</p>
-
-                    <div className="flex space-x-2 mt-2">
-                      <Button
-                        onClick={() => {
-                          setDividaAtual(d);
-                          setViewMode('cadastrar');
-                        }}
-                        className="bg-blue-500 text-sm px-3"
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        onClick={() => deletarDivida(d.id)}
-                        variant="outline"
-                        className="text-sm px-3 border-red-500 text-red-400 hover:bg-red-600 hover:text-white"
-                      >
-                        Deletar
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {contasFiltradas.map((c) => (
+                  <ContaCard
+                    key={c.id}
+                    conta={c}
+                    formatarValor={formatarValor}
+                    onEditar={(conta) => {
+                      setContaAtual({
+                        ...criarContaVazia(),
+                        ...conta,
+                        temServico: conta.temServico ?? false,
+                        servicoVinculado: conta.servicoVinculado || '',
+                        dataPagamento: conta.dataPagamento || '',
+                      });
+                      setViewMode('formulario');
+                    }}
+                    onExcluir={deletarConta}
+                  />
+                ))}
+              </div>
             )}
-          </div>
+          </>
         )}
 
-        {/* Formulário de cadastro/edição */}
-        {viewMode === 'cadastrar' && (
-          <Card className="bg-[#1e293b] p-6 border border-gray-700 max-w-3xl mx-auto mt-6">
-            <CardContent className="space-y-6">
-              <h2 className="text-2xl font-semibold">
-                {dividaAtual.id ? 'Editar Dívida' : 'Cadastrar Dívida'}
-              </h2>
-
-              <div>
-                <Label>Cliente *</Label>
-                <Input
-                  placeholder="Nome do cliente"
-                  value={dividaAtual.cliente}
-                  onChange={(e) => handleChange(e, 'cliente')}
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <Label>Data</Label>
-                <Input
-                  type="date"
-                  value={dividaAtual.data}
-                  onChange={(e) => handleChange(e, 'data')}
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <Label>Descrição *</Label>
-                <Input
-                  placeholder="Descrição da dívida"
-                  value={dividaAtual.descricao}
-                  onChange={(e) => handleChange(e, 'descricao')}
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <Label>Valor</Label>
-                <Input
-                  type="number"
-                  placeholder="Valor em R$"
-                  value={dividaAtual.valor}
-                  onChange={(e) => handleChange(e, 'valor')}
-                  className={inputClass}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={dividaAtual.pago}
-                  onCheckedChange={(checked) =>
-                    setDividaAtual((prev) => ({ ...prev, pago: checked }))
-                  }
-                />
-                <Label>Pago?</Label>
-              </div>
-
-              <div>
-                <Label>Observações</Label>
-                <Textarea
-                  placeholder="Observações adicionais..."
-                  value={dividaAtual.observacoes}
-                  onChange={(e) => handleChange(e, 'observacoes')}
-                  className={inputClass}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-4 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setDividaAtual(criarDividaVazia());
-                    setViewMode('ver');
-                  }}
-                >
-                  ← Voltar
-                </Button>
-                <Button onClick={salvarDivida} className="bg-green-600 hover:bg-green-700">
-                  Salvar
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setDividaAtual(criarDividaVazia());
-                    setViewMode('ver');
-                  }}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {viewMode === 'formulario' && (
+          <ContaForm
+            conta={contaAtual}
+            inputClass={inputClass}
+            onChange={handleChange}
+            onTogglePago={(checked) => setContaAtual((prev) => ({ ...prev, pago: checked }))}
+            onToggleTemServico={(checked) => setContaAtual((prev) => ({ ...prev, temServico: checked }))}
+            onCancelar={limparFormulario}
+            onSalvar={salvarConta}
+          />
         )}
+
+        {/* Se viewMode vazio, não mostra nada */}
       </div>
     </div>
   );
