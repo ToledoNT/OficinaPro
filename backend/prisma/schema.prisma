@@ -19,6 +19,7 @@ model Cliente {
   dataCadastro DateTime  @default(now())
   veiculos     Veiculo[]
   services     Service[] @relation("ClienteToService")
+  contas       Conta[]   @relation("ClienteToConta")
 }
 
 type Endereco {
@@ -51,6 +52,21 @@ model Service {
   prioridade   String?
   valor        String?
   pago         Boolean?
+}
+
+model Conta {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  dataPagamento   String
+  clienteId       String   @db.ObjectId
+  cliente         Cliente  @relation(fields: [clienteId], references: [id], name: "ClienteToConta")
+  descricao       String
+  categoria       String
+  tipo            String   // "A pagar" ou "A receber"
+  valor           String
+  pago            Boolean
+  observacoes     String
+  temServico      Boolean
+  servicoVinculado String?
 }
 
 model Log {
