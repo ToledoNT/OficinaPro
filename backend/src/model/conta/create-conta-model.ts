@@ -11,6 +11,7 @@ export class CreateContaModel {
   observacoes: string;
   temServico: boolean;
   servicoVinculado: string;
+  servicoId?: string; // Adicionando servicoId
 
   constructor(data: Partial<CreateContaModel>) {
     this.id = data.id;
@@ -25,6 +26,7 @@ export class CreateContaModel {
     this.observacoes = data.observacoes ?? ''; // Observação padrão vazia
     this.temServico = data.temServico ?? true; // Assumindo que "temServico" é verdadeiro por padrão
     this.servicoVinculado = data.servicoVinculado ?? ''; // Serviço vinculado, pode ser vazio
+    this.servicoId = data.servicoId; // Adicionando o servicoId
   }
 
   // Método para converter o modelo em payload para persistência
@@ -41,6 +43,7 @@ export class CreateContaModel {
       observacoes: this.observacoes,
       temServico: this.temServico,
       servicoVinculado: this.servicoVinculado,
+      servicoId: this.servicoId, // Incluindo servicoId no payload
     };
 
     if (this.id !== undefined) {

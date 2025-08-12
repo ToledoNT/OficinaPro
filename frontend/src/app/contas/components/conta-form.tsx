@@ -6,7 +6,7 @@ import { Textarea } from '@/app/clientes/components/ui/textarea';
 import { Button } from '@/app/clientes/components/ui/button';
 import { Card, CardContent } from '@/app/clientes/components/ui/card';
 import { Cliente } from '@/app/interfaces/clientes-interface';
-import { ContaFormProps } from '@/app/interfaces/contas-interface';
+import { Conta, ContaFormProps } from '@/app/interfaces/contas-interface';
 
 const categorias = [
   'Serviço',
@@ -51,61 +51,80 @@ export function ContaForm({
   }, [conta.cliente]);
 
   function selecionarCliente(cliente: Cliente) {
-    onChangeValue('clienteId', String(cliente.id)); // Atualiza clienteId no pai
-    onChangeValue('cliente', cliente.nome);
-    setClienteBusca(cliente.nome);
-    setClienteSugestoes([]);
+    onChangeValue('clienteId', cliente.id);  
+    onChangeValue('cliente', cliente.nome); 
+    setClienteBusca(cliente.nome); 
+    setClienteSugestoes([]); 
+    console.log(cliente.id);
   }
 
   function handleClienteBuscaChange(e: React.ChangeEvent<HTMLInputElement>) {
     const valor = e.target.value;
     setClienteBusca(valor);
-    onChangeValue('cliente', valor);
+    onChangeValue('cliente', valor); // Atualiza o nome do cliente enquanto o usuário digita
 
     const clienteEncontrado = clientes.find(
       (c) => c.nome.toLowerCase() === valor.trim().toLowerCase()
     );
 
     if (clienteEncontrado) {
-      onChangeValue('clienteId', String(clienteEncontrado.id));
+      // Se o cliente for encontrado, atualiza o clienteId
+      onChangeValue('clienteId', clienteEncontrado.id);  // Atualiza clienteId com o id do cliente
     } else {
-      onChangeValue('clienteId', undefined);
+      // Se não encontrar, limpa o clienteId
+      onChangeValue('clienteId', undefined);  // Garante que o campo clienteId seja undefined
     }
   }
-
   function handleSalvar() {
     if (!conta.clienteId) {
       alert('Selecione um cliente válido.');
       return;
     }
+  
     if (!conta.dataPagamento.trim()) {
       alert('O campo Data de Pagamento é obrigatório.');
       return;
     }
+  
     if (!conta.descricao.trim()) {
       alert('O campo Descrição é obrigatório.');
       return;
     }
+  
     if (!conta.categoria.trim()) {
       alert('O campo Categoria é obrigatório.');
       return;
     }
+  
     if (!conta.tipo.trim()) {
       alert('O campo Tipo é obrigatório.');
       return;
     }
+  
     if (!conta.valor || Number(conta.valor) <= 0) {
       alert('O campo Valor é obrigatório e deve ser maior que zero.');
       return;
     }
+  
     if (conta.temServico && !conta.servicoId) {
       alert('Selecione um serviço válido.');
       return;
     }
-
-    onSalvar();
+  
+    // Aqui estamos criando o objeto de dados a ser enviado para o backend.
+    const dadosParaSalvar: Conta = {
+      ...conta, 
+      clienteId: conta.clienteId || '', // Garante que o clienteId seja uma string
+      servicoId: conta.servicoId || '', // Garante que servicoId seja uma string
+    };
+  
+    console.log('Dados para salvar:', dadosParaSalvar);  // Verifique no console se os dados estão corretos
+  
+    // Chama a função onSalvar e passa os dados com o clienteId
+    onSalvar(dadosParaSalvar);
   }
-
+  
+  
   return (
     <Card className="bg-[#1e293b] p-6 border border-gray-700 max-w-3xl mx-auto mt-6">
       <CardContent className="space-y-6">
@@ -118,7 +137,7 @@ export function ContaForm({
           <Input
             id="clienteBusca"
             value={clienteBusca}
-            onChange={handleClienteBuscaChange}
+            onChange={handleClienteBuscaChange}  // Atualiza a busca enquanto o usuário digita
             placeholder="Digite o nome do cliente"
             className={inputClass}
             autoComplete="off"
@@ -131,7 +150,7 @@ export function ContaForm({
                   className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
                   onClick={(e) => {
                     e.preventDefault();
-                    selecionarCliente(c);
+                    selecionarCliente(c);  // Atualiza o clienteId quando um cliente é selecionado
                   }}
                 >
                   {c.nome}
@@ -140,6 +159,9 @@ export function ContaForm({
             </ul>
           )}
         </div>
+
+        {/* Campo invisível para armazenar o clienteId */}
+        <input type="hidden" name="clienteId" value={conta.clienteId || ''} />
 
         <div className="flex items-center space-x-2">
           <Switch checked={conta.temServico} onCheckedChange={onToggleTemServico} />

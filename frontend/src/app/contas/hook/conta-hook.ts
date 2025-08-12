@@ -102,7 +102,7 @@ export function useContas() {
 
       const contaParaSalvar: IRegisterContaData = {
         ...conta,
-        clienteId: Number(conta.clienteId),
+        clienteId: String(conta.clienteId),
       };
 
       let result;
