@@ -27,7 +27,7 @@ export type Conta = {
 
 export interface IRegisterContaData {
   dataPagamento: string;
-  clienteId?: number;
+  clienteId?: string;
   cliente: string;
   descricao: string;
   categoria: string;
@@ -52,5 +52,5 @@ export interface ContaFormProps {
   onTogglePago: (checked: boolean) => void;
   onToggleTemServico: (checked: boolean) => void;
   onCancelar: () => void;
-  onSalvar: () => void;
+  onSalvar: (dados: Conta) => void;  
 }

@@ -67,6 +67,7 @@ model Conta {
   observacoes     String
   temServico      Boolean
   servicoVinculado String?
+  servicoId String
 }
 
 model Log {

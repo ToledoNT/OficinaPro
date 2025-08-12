@@ -37,7 +37,6 @@ export default function Contas() {
   const { clientes, loading: loadingClientes, error: errorClientes } = useClientes();
   const { contas, salvarConta, deletarConta } = useContas();
 
-  // Usa hook para pegar serviços filtrados por clienteId atual (string | undefined)
   const { servicos: servicosDoCliente } = useServicosPorCliente(contaAtual.clienteId);
 
   const visualizarConta = (conta: Conta) => {
