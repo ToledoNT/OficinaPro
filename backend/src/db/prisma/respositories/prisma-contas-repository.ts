@@ -8,16 +8,27 @@ export class PrismaContaRepository {
   async create(data: ICreateConta): Promise<ResponseTemplateInterface> {
     try {
       const payload: any = { ...data };
-
+  
+      // Verificar se o campo clienteId está presente, então conectar o cliente
       if (payload.clienteId) {
         payload.cliente = { connect: { id: payload.clienteId } };
         delete payload.clienteId;
       }
-
+  
+      // Adicionar o campo servicoId somente quando tiver um serviço vinculado
+      if (payload.temServico && payload.servicoId) {
+        // Se tem serviço e servicoId foi passado, então inclui o servicoId no payload
+      } else {
+        // Se não tem serviço vinculado ou servicoId não foi passado, remove o campo
+        delete payload.servicoId;
+      }
+  
+      // Criar a conta com os dados modificados
       const response = await prisma.conta.create({
         data: payload,
       });
-
+  
+      // Retornar a resposta com sucesso
       return new ResponseTemplateModel(
         true,
         201,
@@ -25,7 +36,7 @@ export class PrismaContaRepository {
         response
       );
     } catch (error) {
-      console.error("Erro ao criar conta:", error); 
+      console.error("Erro ao criar conta:", error);
       return new ResponseTemplateModel(false, 500, "Erro ao criar conta", []);
     }
   }

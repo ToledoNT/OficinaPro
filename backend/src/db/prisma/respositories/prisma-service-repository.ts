@@ -21,27 +21,26 @@ export class PrismaServiceRepository {
       return new ResponseTemplateModel(false, 500, "Erro ao criar serviço", []);
     }
   }
+
+  async update(id: string, updateData: IUpdateService): Promise<ResponseTemplateInterface> {
+    // Remover o 'id' do updateData, pois o 'id' não pode ser alterado
+    const { id: _, ...updateFields } = updateData;  // Remover o 'id'
   
-  async update(id: string, data: Partial<IUpdateService>): Promise<ResponseTemplateInterface> {
     try {
-      const payload: any = { ...data };
+      console.log('Campos para atualização:', updateFields);  // Para depuração
   
-      if (payload.clienteId) {
-        payload.cliente = { connect: { id: payload.clienteId } };
-        delete payload.clienteId; // Remove clienteId porque não existe no modelo Prisma
-      }
-  
-      if ('data' in payload) {
-        delete payload.data;
-      }
-  
+      // Executando a atualização no Prisma, passando apenas os campos que podem ser alterados
       const response = await prisma.service.update({
-        where: { id },
-        data: payload,
+        where: {
+          id,  // ID do serviço a ser atualizado
+        },
+        data: updateFields,  // Passa apenas os dados que foram recebidos, sem o 'id'
       });
   
+      // Retorno do sucesso na atualização
       return new ResponseTemplateModel(true, 200, "Serviço atualizado com sucesso", response);
     } catch (error) {
+      // Em caso de erro, logar o erro e retornar uma resposta de erro
       console.error("Erro ao atualizar serviço:", error);
       return new ResponseTemplateModel(false, 500, "Erro ao atualizar serviço", []);
     }
@@ -62,14 +61,12 @@ export class PrismaServiceRepository {
       console.error("Erro ao deletar serviço:", error);
   
       if (error.code === "P2025") {
-        // Registro não encontrado
         return new ResponseTemplateModel(false, 404, "Serviço não encontrado para exclusão", []);
       }
   
       return new ResponseTemplateModel(false, 500, "Erro ao deletar serviço", []);
     }
   }
-  
   
   async getAll(): Promise<ResponseTemplateInterface> {
     try {

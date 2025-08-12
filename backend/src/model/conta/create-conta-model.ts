@@ -10,7 +10,7 @@ export class CreateContaModel {
   pago: boolean;
   observacoes: string;
   temServico: boolean;
-  servicoVinculado: string;
+  servicoVinculado?: string; // Agora servicoVinculado é opcional
   servicoId?: string; // Adicionando servicoId
 
   constructor(data: Partial<CreateContaModel>) {
@@ -26,10 +26,9 @@ export class CreateContaModel {
     this.observacoes = data.observacoes ?? ''; // Observação padrão vazia
     this.temServico = data.temServico ?? true; // Assumindo que "temServico" é verdadeiro por padrão
     this.servicoVinculado = data.servicoVinculado ?? ''; // Serviço vinculado, pode ser vazio
-    this.servicoId = data.servicoId; // Adicionando o servicoId
+    this.servicoId = data.servicoId ?? undefined; // Garantir que servicoId seja undefined se não passado
   }
 
-  // Método para converter o modelo em payload para persistência
   toPayload() {
     const payload: Record<string, any> = {
       dataPagamento: this.dataPagamento,
@@ -42,12 +41,18 @@ export class CreateContaModel {
       pago: this.pago,
       observacoes: this.observacoes,
       temServico: this.temServico,
-      servicoVinculado: this.servicoVinculado,
-      servicoId: this.servicoId, // Incluindo servicoId no payload
     };
 
+    if (this.servicoVinculado && this.servicoVinculado.trim() !== '') {
+      payload.servicoVinculado = this.servicoVinculado;
+    }
+
+    if (this.servicoId !== undefined && this.servicoId !== null) {
+      payload.servicoId = this.servicoId;
+    }
+
     if (this.id !== undefined) {
-      payload.id = this.id; // Inclui id se existir
+      payload.id = this.id;
     }
 
     return payload;

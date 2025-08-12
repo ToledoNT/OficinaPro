@@ -5,9 +5,8 @@ import { CreateLog } from "../logs/create-log";
 
 export class UpdateService {
   async execute(id: string, updateData: IUpdateService): Promise<ResponseTemplateInterface> {
-    if (!id) throw new Error("ID do usuário é obrigatório para atualização");
-    const responseUpdate = await new PrismaServiceRepository().update(id, updateData);
-
+    const responseUpdate = await new PrismaServiceRepository().update(id, updateData)
+console.log(responseUpdate);
     if (!responseUpdate.status) {
       await new CreateLog().execute(responseUpdate);
     }

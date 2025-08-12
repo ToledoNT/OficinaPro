@@ -11,7 +11,7 @@ export interface ContaCardProps {
 export type Conta = {
   id?: number;
   dataPagamento: string;
-  clienteId?: string;       // mudou para string
+  clienteId?: string;       
   cliente: string;
   descricao: string;
   categoria: string;
@@ -21,7 +21,7 @@ export type Conta = {
   observacoes: string;
   temServico: boolean;
   servicoVinculado: string;
-  servicoId?: string;       // mudou para string
+  servicoId?: string;       
 };
 
 
