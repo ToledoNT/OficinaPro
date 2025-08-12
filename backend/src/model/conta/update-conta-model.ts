@@ -2,7 +2,7 @@ import { IUpdateConta } from "../../interfaces/contas/update-conta-interface";
 
 export class UpdateContaModel implements IUpdateConta {
   dataPagamento?: string;
-  clienteId?: string;
+  clienteId?: string | null;  // Permite que seja string ou null
   descricao?: string;
   categoria?: string;
   tipo?: 'A pagar' | 'A receber';
@@ -14,7 +14,7 @@ export class UpdateContaModel implements IUpdateConta {
 
   constructor(data: Partial<IUpdateConta>) {
     this.dataPagamento = data.dataPagamento;
-    this.clienteId = data.clienteId;
+    this.clienteId = data.clienteId ?? null;  // Pode ser null ou string
     this.descricao = data.descricao;
     this.categoria = data.categoria;
     this.tipo = data.tipo;

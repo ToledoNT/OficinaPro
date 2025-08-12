@@ -1,5 +1,3 @@
-'use client';
-
 import { Button } from "@/app/clientes/components/ui/button";
 import { Card, CardContent } from "@/app/clientes/components/ui/card";
 import { ContaCardProps } from '@/app/interfaces/contas-interface';
@@ -43,7 +41,13 @@ export function ContaCard({ conta, formatarValor, onVer, onEditar, onExcluir, lo
           <Button
             variant="outline"
             className="text-red-500 border-red-500 hover:bg-red-600 hover:text-white text-xs px-3"
-            onClick={() => onExcluir(conta.id)}
+            onClick={() => {
+              if (conta.id !== undefined) {
+                onExcluir(conta.id);
+              } else {
+                alert('ID da conta inválido');
+              }
+            }}
             disabled={loading}
           >
             {loading ? "Excluindo..." : "Excluir"}

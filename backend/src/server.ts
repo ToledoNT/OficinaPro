@@ -20,6 +20,6 @@ server.use(express.urlencoded({ extended: true }));
 server.use("/api", Status);
 server.use("/api", ClienteRoute);
 server.use("/api", ServiceRoute);
-server.use("api", ContaRoute);
+server.use("/api", ContaRoute);
 
 export { server };
