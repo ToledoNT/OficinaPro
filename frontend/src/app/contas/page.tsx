@@ -5,78 +5,40 @@ import { useRouter } from 'next/navigation';
 import { Input } from '../clientes/components/ui/input';
 import { Button } from '../clientes/components/ui/button';
 import { ContaCard } from './components/conta-card';
-import { Conta, ContaForm } from './components/conta-form';
-import { useClientes, useServicos } from './hook/conta-hook';
+import { ContaForm } from './components/conta-form';
+import { useClientes, useContas, useServicosPorCliente } from './hook/conta-hook';
+import { Conta } from '@/app/interfaces/contas-interface';
 
 type ViewMode = '' | 'lista' | 'formulario' | 'visualizar';
-
-const criarContaVazia = (): Conta => ({
-  id: 0,
-  dataPagamento: '',
-  cliente: '',
-  descricao: '',
-  categoria: 'Serviço',
-  tipo: 'A pagar',
-  valor: '',
-  pago: false,
-  observacoes: '',
-  temServico: false,
-  servicoVinculado: '',
-});
 
 export default function Contas() {
   const router = useRouter();
 
   const [viewMode, setViewMode] = useState<ViewMode>('');
-  const [contas, setContas] = useState<Conta[]>([]);
-  const [contaAtual, setContaAtual] = useState<Conta>(criarContaVazia());
+  const [contaAtual, setContaAtual] = useState<Conta>({
+    id: undefined,
+    dataPagamento: '',
+    cliente: '',
+    clienteId: undefined,
+    descricao: '',
+    categoria: 'Serviço',
+    tipo: 'A pagar',
+    valor: '',
+    pago: false,
+    observacoes: '',
+    temServico: false,
+    servicoId: undefined,
+    servicoVinculado: '',
+  });
 
   const [filtro, setFiltro] = useState('');
   const [statusFiltro, setStatusFiltro] = useState<'todos' | 'pagas' | 'naoPagas'>('todos');
 
   const { clientes, loading: loadingClientes, error: errorClientes } = useClientes();
-  const { servicos, loading: loadingServicos, error: errorServicos } = useServicos();
+  const { contas, salvarConta, deletarConta } = useContas();
 
-  function salvarConta() {
-    if (!contaAtual.descricao.trim()) {
-      alert('A descrição da conta é obrigatória.');
-      return;
-    }
-    if (!contaAtual.cliente.trim()) {
-      alert('O nome do cliente é obrigatório.');
-      return;
-    }
-    if (contaAtual.valor && Number(contaAtual.valor) < 0) {
-      alert('O valor não pode ser negativo.');
-      return;
-    }
-    if (!contaAtual.dataPagamento) {
-      alert('A data de pagamento é obrigatória.');
-      return;
-    }
-    if (contaAtual.temServico && !contaAtual.servicoVinculado.trim()) {
-      alert('Você selecionou que tem serviço, então vincule o serviço.');
-      return;
-    }
-
-    setContas((prev) => {
-      if (contaAtual.id === 0) {
-        return [...prev, { ...contaAtual, id: Date.now() }];
-      } else {
-        return prev.map((c) => (c.id === contaAtual.id ? contaAtual : c));
-      }
-    });
-
-    alert('Conta salva com sucesso!');
-    setContaAtual(criarContaVazia());
-    setViewMode('lista');
-  }
-
-  const deletarConta = (id: number) => {
-    if (confirm('Deseja realmente excluir esta conta?')) {
-      setContas((prev) => prev.filter((c) => c.id !== id));
-    }
-  };
+  // Usa hook para pegar serviços filtrados por clienteId atual (string | undefined)
+  const { servicos: servicosDoCliente } = useServicosPorCliente(contaAtual.clienteId);
 
   const visualizarConta = (conta: Conta) => {
     setContaAtual(conta);
@@ -89,33 +51,38 @@ export default function Contas() {
   ) => {
     let value: string | boolean =
       e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
-
     if (field === 'valor' && typeof value === 'string') {
       value = value.replace(',', '.');
     }
-
-    setContaAtual((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setContaAtual((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleChangeValue = <K extends keyof Conta>(field: K, value: Conta[K]) => {
-    setContaAtual((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setContaAtual((prev) => ({ ...prev, [field]: value }));
   };
 
   const limparFormulario = () => {
-    setContaAtual(criarContaVazia());
+    setContaAtual({
+      id: undefined,
+      dataPagamento: '',
+      cliente: '',
+      clienteId: undefined,
+      descricao: '',
+      categoria: 'Serviço',
+      tipo: 'A pagar',
+      valor: '',
+      pago: false,
+      observacoes: '',
+      temServico: false,
+      servicoId: undefined,
+      servicoVinculado: '',
+    });
     setViewMode('');
   };
 
-  // Filtra contas pelo filtro de texto + filtro de status
   const contasFiltradas = contas.filter((c) => {
     const textoMatch = [c.cliente, c.descricao, c.valor, c.categoria]
-      .some((campo) => campo.toLowerCase().includes(filtro.toLowerCase()));
+      .some((campo) => campo?.toLowerCase().includes(filtro.toLowerCase()));
 
     let statusMatch = true;
     if (statusFiltro === 'pagas') statusMatch = c.pago === true;
@@ -136,7 +103,21 @@ export default function Contas() {
   const totalReceber = contas
     .filter((c) => c.tipo === 'A receber' && !c.pago)
     .reduce((acc, cur) => acc + Number(cur.valor || 0), 0);
-  const totalPago = contas.filter((c) => c.pago).reduce((acc, cur) => acc + Number(cur.valor || 0), 0);
+  const totalPago = contas
+    .filter((c) => c.pago)
+    .reduce((acc, cur) => acc + Number(cur.valor || 0), 0);
+
+  // Função para salvar e aguardar o resultado, exibindo alerta
+  const onSalvarConta = async () => {
+    const resultado = await salvarConta(contaAtual);
+    if (resultado.success) {
+      alert('Conta salva com sucesso!');
+      limparFormulario();
+      setViewMode('lista');
+    } else {
+      alert('Erro ao salvar conta: ' + (resultado.message ?? ''));
+    }
+  };
 
   const inputClass =
     'bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 caret-white focus:outline-none focus:ring-2 focus:ring-blue-500';
@@ -151,7 +132,7 @@ export default function Contas() {
           </Button>
           <Button
             onClick={() => {
-              setContaAtual(criarContaVazia());
+              limparFormulario();
               setViewMode('formulario');
             }}
             className="bg-green-600 hover:bg-green-700"
@@ -167,10 +148,9 @@ export default function Contas() {
           </Button>
         </div>
 
-        {/* Lista de contas com filtros */}
+        {/* Lista */}
         {viewMode === 'lista' && (
           <>
-            {/* Filtros */}
             <div className="mb-4 flex flex-wrap items-center gap-6">
               <Input
                 value={filtro}
@@ -178,21 +158,15 @@ export default function Contas() {
                 placeholder="Buscar cliente, descrição, valor ou categoria..."
                 className={`${inputClass} max-w-sm`}
               />
-
-              {/* Novo select lookup para filtro de status */}
               <select
                 className={`${inputClass} py-2 px-3 rounded max-w-xs`}
                 value={statusFiltro}
-                onChange={(e) =>
-                  setStatusFiltro(e.target.value as 'todos' | 'pagas' | 'naoPagas')
-                }
+                onChange={(e) => setStatusFiltro(e.target.value as 'todos' | 'pagas' | 'naoPagas')}
               >
                 <option value="todos">Todos</option>
                 <option value="pagas">Pagas</option>
                 <option value="naoPagas">Não Pagas</option>
               </select>
-
-              {/* Totais */}
               <div className="space-x-4 text-gray-300">
                 <span>
                   <strong>Total a pagar:</strong>{' '}
@@ -217,21 +191,15 @@ export default function Contas() {
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {contasFiltradas.map((c) => (
                   <ContaCard
-                    key={c.id}
+                    key={c.id ?? Math.random()}
                     conta={c}
                     formatarValor={formatarValor}
                     onVer={() => visualizarConta(c)}
-                    onEditar={(conta) => {
-                      setContaAtual({
-                        ...criarContaVazia(),
-                        ...conta,
-                        temServico: conta.temServico ?? false,
-                        servicoVinculado: conta.servicoVinculado || '',
-                        dataPagamento: conta.dataPagamento || '',
-                      });
+                    onEditar={(conta: Conta) => {
+                      setContaAtual(conta);
                       setViewMode('formulario');
                     }}
-                    onExcluir={deletarConta}
+                    onExcluir={() => c.id && deletarConta(c.id)}
                     loading={false}
                   />
                 ))}
@@ -243,24 +211,24 @@ export default function Contas() {
         {/* Formulário */}
         {viewMode === 'formulario' && (
           <>
-            {(loadingClientes || loadingServicos) ? (
+            {loadingClientes ? (
               <p>Carregando dados...</p>
             ) : errorClientes ? (
               <p className="text-red-500">{errorClientes}</p>
-            ) : errorServicos ? (
-              <p className="text-red-500">{errorServicos}</p>
             ) : (
               <ContaForm
                 conta={contaAtual}
                 clientes={clientes}
-                servicos={servicos}
+                servicos={servicosDoCliente}
                 inputClass={inputClass}
                 onChange={handleChange}
                 onChangeValue={handleChangeValue}
                 onTogglePago={(checked) => setContaAtual((prev) => ({ ...prev, pago: checked }))}
-                onToggleTemServico={(checked) => setContaAtual((prev) => ({ ...prev, temServico: checked }))}
+                onToggleTemServico={(checked) =>
+                  setContaAtual((prev) => ({ ...prev, temServico: checked }))
+                }
                 onCancelar={limparFormulario}
-                onSalvar={salvarConta}
+                onSalvar={onSalvarConta}
               />
             )}
           </>
@@ -278,7 +246,6 @@ export default function Contas() {
             <p><strong>Pago:</strong> {contaAtual.pago ? 'Sim' : 'Não'}</p>
             <p><strong>Data de Pagamento:</strong> {contaAtual.dataPagamento}</p>
             <p><strong>Observações:</strong> {contaAtual.observacoes}</p>
-
             <div className="mt-4 flex gap-3">
               <Button
                 onClick={() => setViewMode('lista')}

@@ -6,6 +6,7 @@ import {
 } from "@/app/interfaces/clientes-interface";
 import { ApiResponseCliente, ApiResponseClientes, ApiResponseDeleteResponse } from "@/app/interfaces/response-interface";
 import { IRegisterServiceData, IUpdateServiceData, Servico } from "@/app/interfaces/service-interface";
+import { IRegisterContaData, Conta } from "@/app/interfaces/contas-interface";
 
 const apiBaseURL = "http://localhost:4001/api";
 
@@ -19,6 +20,7 @@ export class ApiService {
     });
   }
 
+  // Clientes
   async getClientes(): Promise<Cliente[]> {
     try {
       const response = await this.api.get<ApiResponseClientes>("/client/allclients");
@@ -55,15 +57,15 @@ export class ApiService {
   async deleteCliente(id: string): Promise<ApiResponseDeleteResponse> {
     try {
       const response = await this.api.delete<ApiResponseDeleteResponse>(`/client/deleteclient/${id}`);
-      console.log("Resposta da API:", response); 
-      return response.data;  // aqui retorna só o corpo, já tipado ApiResponseDelete
+      console.log("Resposta da API:", response);
+      return response.data;
     } catch (error) {
       console.error("Erro ao deletar cliente:", error);
       return this.handleError(error, "Erro ao deletar cliente");
     }
   }
-  
 
+  // Serviços
   async getServicos(): Promise<Servico[]> {
     try {
       const response = await this.api.get<{
@@ -73,13 +75,11 @@ export class ApiService {
       }>("/service/allservices");
 
       if (response.data.status) {
-        const servicosComId: Servico[] = response.data.data.map((item, index) => {
-          return {
-            id: index.toString(),
-            ...item,
-            data: item.data ?? "",
-          };
-        });
+        const servicosComId: Servico[] = response.data.data.map((item, index) => ({
+          id: index.toString(),
+          ...item,
+          data: item.data ?? "",
+        }));
         return servicosComId;
       } else {
         console.error("Erro na API ao buscar serviços:", response.data.message);
@@ -91,24 +91,42 @@ export class ApiService {
     }
   }
 
-  async updateService(
+  async getServicosPorCliente(clienteId: string): Promise<Servico[]> {
+    try {
+      // Recomendo usar encodeURIComponent para evitar problemas com IDs especiais
+      const response = await this.api.get<{ status: boolean; data: Servico[]; message?: string }>(
+        `/contas/getservicos?id=${encodeURIComponent(clienteId)}`
+      );
+  
+      if (response.data.status) {
+        return response.data.data || [];
+      }
+  
+      console.error("Erro na API ao buscar serviços:", response.data.message);
+      return [];
+    } catch (error) {
+      console.error("Erro ao buscar serviços:", error);
+      return [];
+    }
+  }
+  
+async updateService(
     dados: IUpdateServiceData
   ): Promise<{ status: boolean; message?: string }> {
     try {
       if (!dados.id) {
         throw new Error("ID do serviço é obrigatório para atualização.");
       }
-      const { id,...dataToUpdate } = dados;
-      console.log(dataToUpdate);
-  
+      const { id, ...dataToUpdate } = dados;
+
       const response = await this.api.put<{
         status: boolean;
         message?: string;
         data?: Servico;
       }>(`/service/updateservice/${id}`, dataToUpdate);
-  
+
       const { status, message } = response.data;
-  
+
       if (status) {
         return {
           status: true,
@@ -129,8 +147,7 @@ export class ApiService {
       };
     }
   }
-  
-  
+
   async registerService(data: IRegisterServiceData): Promise<ApiResponseCliente> {
     try {
       const response = await this.api.post<ApiResponseCliente>("/service/createservice", data);
@@ -149,6 +166,51 @@ export class ApiService {
     }
   }
 
+  // Contas
+  async getContas(): Promise<Conta[]> {
+    try {
+      const response = await this.api.get<{ status: boolean; data: Conta[]; message?: string }>("/conta/allcontas");
+      if (response.data.status) {
+        return response.data.data || [];
+      } else {
+        console.error("Erro na API ao buscar contas:", response.data.message);
+        return [];
+      }
+    } catch (error) {
+      console.error("Erro ao buscar contas:", error);
+      return [];
+    }
+  }
+
+  async registerConta(data: IRegisterContaData): Promise<ApiResponseCliente> {
+    try {
+      const response = await this.api.post<ApiResponseCliente>("/conta/createconta", data);
+      console.log("chegou")
+      return response.data;
+    } catch (error) {
+      return this.handleError(error, "Erro ao registrar conta");
+    }
+  }
+
+  async updateConta(id: number, data: IRegisterContaData): Promise<ApiResponseCliente> {
+    try {
+      const response = await this.api.put<ApiResponseCliente>(`/conta/updateconta/${id}`, data);
+      return response.data;
+    } catch (error) {
+      return this.handleError(error, "Erro ao atualizar conta");
+    }
+  }
+
+  async deleteConta(id: number): Promise<ApiResponseCliente> {
+    try {
+      const response = await this.api.delete<ApiResponseCliente>(`/conta/deleteconta/${id}`);
+      return response.data;
+    } catch (error) {
+      return this.handleError(error, "Erro ao deletar conta");
+    }
+  }
+
+  // Tratamento de erro genérico
   private handleError(error: unknown, defaultMessage: string): ApiResponseCliente {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError<{ message?: string }>;

@@ -1,6 +1,6 @@
 export interface IUpdateConta {
   dataPagamento?: string;
-  clienteId?: string;
+  clienteId?: string | null; 
   descricao?: string;
   categoria?: string;
   tipo?: 'A pagar' | 'A receber';

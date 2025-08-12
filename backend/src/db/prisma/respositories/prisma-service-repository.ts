@@ -90,21 +90,41 @@ export class PrismaServiceRepository {
     }
   }
 
-  async findById(id: string): Promise<ResponseTemplateInterface> {
+  async findByClienteId(clienteId: string): Promise<ResponseTemplateInterface> {
     try {
-      const response = await prisma.service.findUnique({
-        where: { id },
+      const response = await prisma.service.findMany({
+        where: { clienteId: clienteId }, 
       });
-      if (!response) {
-        return new ResponseTemplateModel(false, 404, "Serviço não encontrado", null);
+  
+      if (!response || response.length === 0) {
+        return new ResponseTemplateModel(false, 404, "Serviços não encontrados", []);
       }
-      return new ResponseTemplateModel(true, 200, "Serviço encontrado", response);
+  
+      return new ResponseTemplateModel(true, 200, "Serviços encontrados", response);
     } catch (error) {
-      console.error("Erro ao buscar serviço:", error);
-      return new ResponseTemplateModel(false, 500, "Erro ao buscar serviço", []);
+      console.error("Erro ao buscar serviços:", error);
+      return new ResponseTemplateModel(false, 500, "Erro ao buscar serviços", []);
     }
   }
 
+  async findByServiceId(serviceId: string): Promise<ResponseTemplateInterface> {
+    try {
+      const service = await prisma.service.findUnique({
+        where: { id: serviceId },
+      });
+  
+      if (!service) {
+        return new ResponseTemplateModel(false, 404, "Serviço não encontrado", null);
+      }
+  
+      return new ResponseTemplateModel(true, 200, "Serviço encontrado", service);
+    } catch (error) {
+      console.error("Erro ao buscar serviço:", error);
+      return new ResponseTemplateModel(false, 500, "Erro ao buscar serviço", null);
+    }
+  }
+  
+  
   async findAll(): Promise<ResponseTemplateInterface> {
     try {
       const response = await prisma.service.findMany();

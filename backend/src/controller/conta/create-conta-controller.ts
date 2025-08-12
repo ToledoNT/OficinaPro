@@ -1,28 +1,41 @@
 import { Request, Response } from "express";
-import { CreateClientModel } from "../../model/cliente/create-client-model";
-import { CreateUser } from "../../use-case/cliente/create-cliente-use-cases";
-import { ICreateClient } from "../../interfaces/cliente/create-cliente-interfaces";
-import { CreateContaModel } from "../../model/conta/create-conta-model";
-import { ICreateConta } from "../../interfaces/contas/create-conta-interface";
-import { CreateConta } from "../../use-case/contas/create-conta-use-case";
+import { findByServiceId } from "../../use-case/service/get-service-by-id-use-case"; // Ajuste o caminho conforme necessário
+import { CreateContaModel } from "../../model/conta/create-conta-model"; // Ajuste o caminho conforme necessário
+import { CreateConta } from "../../use-case/contas/create-conta-use-case"; // Ajuste o caminho conforme necessário
+import { ICreateConta } from "../../interfaces/contas/create-conta-interface"; // Ajuste o caminho conforme necessário
 
 export class CreateContaController {
   async handle(req: Request, res: Response): Promise<void> {
     const userData = req.body;
+    console.log(userData);
+//     const servicoId = req.body.servicoId;
+// //Enviar o ClientID Direto 
+//     if (!servicoId) {
+//        res.status(400).send({
+//         status: false,
+//         message: 'O campo "servicoId" é obrigatório.',
+//       });
+//     }
+//     const searchClient = await new findByServiceId().execute(servicoId);
+//     if (!searchClient.data) {
+//        res.status(404).send({
+//         status: false,
+//         message: 'Serviço não encontrado.',
+//       });
+//     }
+//     const clientId = searchClient.data.clienteId;
+//     const createContaModel = new CreateContaModel({
+//       ...userData, 
+//       clienteId: clientId, 
+//     });
+//     const payload = createContaModel.toPayload() as ICreateConta;
+//     const createdAccount = await new CreateConta().execute(payload);
 
-    if (!userData?.nome) {
-      res.status(400).send({
-        code: 400,
-        message: "Campo obrigatório 'nome' não foi fornecido.",
-      });
-      return;
-    }
-    const createUserModel = new CreateContaModel(userData);
-    const payload = createUserModel.toPayload() as ICreateConta;
-    const createdUser = await new CreateConta().execute(payload);
-    const statusCode =
-      typeof createdUser?.code === "number" ? createdUser.code : 201;
-
-    res.status(statusCode).send(createdUser);
+//     res.status(200).send({
+//       status: true,
+//       message: 'Conta criada com sucesso',
+//       clienteId: clientId,  
+//       data: createdAccount, 
+//     });
   }
 }
