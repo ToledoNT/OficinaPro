@@ -1,3 +1,5 @@
+import { IUpdateService } from "../../interfaces/services/update-service-interface";
+
 export class UpdateServiceModel {
   id: string;
   clienteId?: string;
@@ -15,7 +17,7 @@ export class UpdateServiceModel {
     this.id = data.id;
     this.clienteId = data.clienteId;
     this.veiculo = data.veiculo;
-    this.dataCadastro = data.dataCadastro; // <-- novo campo aqui também
+    this.dataCadastro = data.dataCadastro;
     this.descricao = data.descricao;
     this.finalizado = data.finalizado;
     this.status = data.status;
@@ -25,12 +27,13 @@ export class UpdateServiceModel {
     this.pago = data.pago;
   }
 
-  toPayload() {
-    const payload: Record<string, any> = {};
+  // Método toPayload para transformar em um formato adequado para o banco de dados
+  toPayload(): Partial<IUpdateService> {
+    const payload: Partial<IUpdateService> = {};
 
     if (this.clienteId !== undefined) payload.clienteId = this.clienteId;
     if (this.veiculo !== undefined) payload.veiculo = this.veiculo;
-    if (this.dataCadastro !== undefined) payload.dataCadastro = this.dataCadastro; // <-- novo campo aqui também
+    if (this.dataCadastro !== undefined) payload.dataCadastro = this.dataCadastro; 
     if (this.descricao !== undefined) payload.descricao = this.descricao;
     if (this.finalizado !== undefined) payload.finalizado = this.finalizado;
     if (this.status !== undefined) payload.status = this.status;

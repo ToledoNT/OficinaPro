@@ -8,6 +8,6 @@ export interface IUpdateConta {
   pago?: boolean;
   observacoes?: string;
   temServico?: boolean;
-  servicoId: string;
+  servicoId?: string;
   servicoVinculado?: string;
 }

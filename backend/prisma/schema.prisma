@@ -61,13 +61,13 @@ model Conta {
   cliente         Cliente  @relation(fields: [clienteId], references: [id], name: "ClienteToConta")
   descricao       String
   categoria       String
-  tipo            String   // "A pagar" ou "A receber"
+  tipo            String   
   valor           String
   pago            Boolean
   observacoes     String
   temServico      Boolean
   servicoVinculado String?
-  servicoId String
+  servicoId String?
 }
 
 model Log {
