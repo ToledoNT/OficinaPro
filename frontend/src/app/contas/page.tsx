@@ -29,20 +29,31 @@ export default function Contas() {
     temServico: false,
     servicoId: undefined,
     servicoVinculado: '',
+    clienteNome: '',
   });
 
   const [filtro, setFiltro] = useState('');
   const [statusFiltro, setStatusFiltro] = useState<'todos' | 'pagas' | 'naoPagas'>('todos');
 
-  const { clientes, loading: loadingClientes, error: errorClientes } = useClientes();
-  const { contas, salvarConta, deletarConta } = useContas();
-
-  const { servicos: servicosDoCliente } = useServicosPorCliente(contaAtual.clienteId);
+  const { clientes, loadingClientes, errorClientes } = useClientes();
+  const { contas, fetchContas, loadingContas, salvarConta, deletarConta } = useContas();
+  const { servicos: servicosDoCliente, loading: loadingServicos } = useServicosPorCliente();
 
   const visualizarConta = (conta: Conta) => {
-    setContaAtual(conta);
+    // Busca o cliente pelo clienteId na lista de clientes
+    let nomeCliente = conta.clienteNome;
+    if ((!nomeCliente || nomeCliente === '') && conta.clienteId && clientes.length > 0) {
+      const clienteEncontrado = clientes.find(c => c.id === conta.clienteId);
+      nomeCliente = clienteEncontrado ? clienteEncontrado.nome : conta.cliente;
+    }
+  
+    setContaAtual({
+      ...conta,
+      clienteNome: nomeCliente || conta.cliente, // fallback
+    });
     setViewMode('visualizar');
   };
+  
 
   const handleChange = <K extends keyof Conta>(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -75,6 +86,7 @@ export default function Contas() {
       temServico: false,
       servicoId: undefined,
       servicoVinculado: '',
+      clienteNome: '',
     });
     setViewMode('');
   };
@@ -106,7 +118,6 @@ export default function Contas() {
     .filter((c) => c.pago)
     .reduce((acc, cur) => acc + Number(cur.valor || 0), 0);
 
-  // Função para salvar e aguardar o resultado, exibindo alerta
   const onSalvarConta = async () => {
     const resultado = await salvarConta(contaAtual);
     if (resultado.success) {
@@ -126,7 +137,13 @@ export default function Contas() {
       <div className="max-w-6xl mx-auto">
         {/* Botões principais */}
         <div className="flex flex-wrap gap-4 mb-4">
-          <Button onClick={() => setViewMode('lista')} className="bg-blue-600 hover:bg-blue-700">
+          <Button
+            onClick={async () => {
+              await fetchContas();
+              setViewMode('lista');
+            }}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
             Ver Contas
           </Button>
           <Button
@@ -150,59 +167,73 @@ export default function Contas() {
         {/* Lista */}
         {viewMode === 'lista' && (
           <>
-            <div className="mb-4 flex flex-wrap items-center gap-6">
-              <Input
-                value={filtro}
-                onChange={(e) => setFiltro(e.target.value)}
-                placeholder="Buscar cliente, descrição, valor ou categoria..."
-                className={`${inputClass} max-w-sm`}
-              />
-              <select
-                className={`${inputClass} py-2 px-3 rounded max-w-xs`}
-                value={statusFiltro}
-                onChange={(e) => setStatusFiltro(e.target.value as 'todos' | 'pagas' | 'naoPagas')}
-              >
-                <option value="todos">Todos</option>
-                <option value="pagas">Pagas</option>
-                <option value="naoPagas">Não Pagas</option>
-              </select>
-              <div className="space-x-4 text-gray-300">
-                <span>
-                  <strong>Total a pagar:</strong>{' '}
-                  {totalPagar.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </span>
-                <span>
-                  <strong>Total a receber:</strong>{' '}
-                  {totalReceber.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </span>
-                <span>
-                  <strong>Total pago:</strong>{' '}
-                  {totalPago.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </span>
-              </div>
-            </div>
-
-            <p className="mb-4 text-gray-300">Contas encontradas: {contasFiltradas.length}</p>
-
-            {contasFiltradas.length === 0 ? (
-              <p className="text-gray-400">Nenhuma conta encontrada.</p>
+            {loadingContas ? (
+              <p>Carregando contas...</p>
             ) : (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {contasFiltradas.map((c) => (
-                  <ContaCard
-                    key={c.id ?? Math.random()}
-                    conta={c}
-                    formatarValor={formatarValor}
-                    onVer={() => visualizarConta(c)}
-                    onEditar={(conta: Conta) => {
-                      setContaAtual(conta);
-                      setViewMode('formulario');
-                    }}
-                    onExcluir={() => c.id && deletarConta(c.id)}
-                    loading={false}
+              <>
+                <div className="mb-4 flex flex-wrap items-center gap-6">
+                  <Input
+                    value={filtro}
+                    onChange={(e) => setFiltro(e.target.value)}
+                    placeholder="Buscar cliente, descrição, valor ou categoria..."
+                    className={`${inputClass} max-w-sm`}
                   />
-                ))}
-              </div>
+                  <select
+                    className={`${inputClass} py-2 px-3 rounded max-w-xs`}
+                    value={statusFiltro}
+                    onChange={(e) =>
+                      setStatusFiltro(e.target.value as 'todos' | 'pagas' | 'naoPagas')
+                    }
+                  >
+                    <option value="todos">Todos</option>
+                    <option value="pagas">Pagas</option>
+                    <option value="naoPagas">Não Pagas</option>
+                  </select>
+                  <div className="space-x-4 text-gray-300">
+                    <span>
+                      <strong>Total a pagar:</strong>{' '}
+                      {totalPagar.toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      })}
+                    </span>
+                    <span>
+                      <strong>Total a receber:</strong>{' '}
+                      {totalReceber.toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      })}
+                    </span>
+                    <span>
+                      <strong>Total pago:</strong>{' '}
+                      {totalPago.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="mb-4 text-gray-300">Contas encontradas: {contasFiltradas.length}</p>
+
+                {contasFiltradas.length === 0 ? (
+                  <p className="text-gray-400">Nenhuma conta encontrada.</p>
+                ) : (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {contasFiltradas.map((c) => (
+                      <ContaCard
+                        key={c.id ?? Math.random()}
+                        conta={c}
+                        formatarValor={formatarValor}
+                        onVer={() => visualizarConta(c)}
+                        onEditar={() => {
+                          setContaAtual(c);
+                          setViewMode('formulario');
+                        }}
+                        onExcluir={() => c.id && deletarConta(c.id)}
+                        loading={false}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
@@ -210,7 +241,7 @@ export default function Contas() {
         {/* Formulário */}
         {viewMode === 'formulario' && (
           <>
-            {loadingClientes ? (
+            {loadingClientes || loadingServicos ? (
               <p>Carregando dados...</p>
             ) : errorClientes ? (
               <p className="text-red-500">{errorClientes}</p>
@@ -235,24 +266,38 @@ export default function Contas() {
 
         {/* Visualizar */}
         {viewMode === 'visualizar' && (
-          <div className="bg-[#1e293b] p-4 rounded border border-gray-700 text-gray-300 max-w-4xl mx-auto">
-            <h2 className="text-white text-2xl mb-4">Visualizar Conta</h2>
-            <p><strong>Descrição:</strong> {contaAtual.descricao}</p>
-            <p><strong>Cliente:</strong> {contaAtual.cliente}</p>
-            <p><strong>Categoria:</strong> {contaAtual.categoria}</p>
-            <p><strong>Tipo:</strong> {contaAtual.tipo}</p>
-            <p><strong>Valor:</strong> {formatarValor(contaAtual.valor)}</p>
-            <p><strong>Pago:</strong> {contaAtual.pago ? 'Sim' : 'Não'}</p>
-            <p><strong>Data de Pagamento:</strong> {contaAtual.dataPagamento}</p>
-            <p><strong>Observações:</strong> {contaAtual.observacoes}</p>
-            <div className="mt-4 flex gap-3">
-              <Button
-                onClick={() => setViewMode('lista')}
-                className="bg-blue-600 hover:bg-blue-700 text-xs px-3"
-              >
-                Voltar
-              </Button>
+          <div className="bg-[#1e293b] border border-gray-700 rounded-md p-4 space-y-2 text-sm max-w-4xl mx-auto">
+            <div className="flex justify-between items-start gap-2">
+              <div>
+                <p>
+                  <strong>Cliente:</strong> {contaAtual.clienteNome || '-'}
+                </p>
+                <p>
+                  <strong>Categoria:</strong> {contaAtual.categoria || '-'}
+                </p>
+                <p>
+                  <strong>Tipo:</strong> {contaAtual.tipo || '-'}
+                </p>
+                <p>
+                  <strong>Valor:</strong> {formatarValor(contaAtual.valor)}
+                </p>
+                <p>
+                  <strong>Pago:</strong> {contaAtual.pago ? 'Sim' : 'Não'}
+                </p>
+                <p>
+                  <strong>Data de Pagamento:</strong> {contaAtual.dataPagamento || '-'}
+                </p>
+              </div>
             </div>
+
+            <p>
+              <strong>Descrição:</strong> {contaAtual.descricao || '-'}
+            </p>
+            {contaAtual.observacoes && (
+              <p>
+                <strong>Observações:</strong> {contaAtual.observacoes}
+              </p>
+            )}
           </div>
         )}
       </div>

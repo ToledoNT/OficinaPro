@@ -1,17 +1,10 @@
 import { Cliente } from "./clientes-interface";
 import { Servico } from "./service-interface";
 
-export interface ContaCardProps {
-  conta: Conta;
-  formatarValor: (valor: string) => string;
-  onEditar: (conta: Conta) => void;
-  onExcluir: (id: number) => void;
-}
-
 export type Conta = {
   id?: number;
   dataPagamento: string;
-  clienteId?: string;       
+  clienteId?: string;  
   cliente: string;
   descricao: string;
   categoria: string;
@@ -21,9 +14,9 @@ export type Conta = {
   observacoes: string;
   temServico: boolean;
   servicoVinculado: string;
-  servicoId?: string;       
+  servicoId?: string; 
+  clienteNome: string;  
 };
-
 
 export interface IRegisterContaData {
   dataPagamento: string;
@@ -37,6 +30,7 @@ export interface IRegisterContaData {
   observacoes: string;
   temServico: boolean;
   servicoVinculado: string;
+  servicoId?: string;
 }
 
 export interface ContaFormProps {
@@ -52,5 +46,9 @@ export interface ContaFormProps {
   onTogglePago: (checked: boolean) => void;
   onToggleTemServico: (checked: boolean) => void;
   onCancelar: () => void;
-  onSalvar: (dados: Conta) => void;  
+  onSalvar: (conta: Conta) => void;
+  onClienteChange?: (clienteId: string) => void; 
+  loadingClientes?: boolean;
+  errorClientes?: string | null;
+  readonly?: boolean; 
 }
