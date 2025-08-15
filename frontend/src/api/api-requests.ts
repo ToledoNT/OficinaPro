@@ -93,7 +93,6 @@ export class ApiService {
 
   async getServicosPorCliente(clienteId: string): Promise<Servico[]> {
     try {
-      // Recomendo usar encodeURIComponent para evitar problemas com IDs especiais
       const response = await this.api.get<{ status: boolean; data: Servico[]; message?: string }>(
         `/contas/getservicos?id=${encodeURIComponent(clienteId)}`
       );
@@ -169,7 +168,8 @@ async updateService(
   // Contas
   async getContas(): Promise<Conta[]> {
     try {
-      const response = await this.api.get<{ status: boolean; data: Conta[]; message?: string }>("/conta/allcontas");
+      const response = await this.api.get<{ status: boolean; data: Conta[]; message?: string }>("/contas/allcontas");
+      console.log(response);
       if (response.data.status) {
         return response.data.data || [];
       } else {

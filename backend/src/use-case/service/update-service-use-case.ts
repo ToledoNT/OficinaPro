@@ -6,11 +6,9 @@ import { CreateLog } from "../logs/create-log";
 export class UpdateService {
   async execute(id: string, updateData: IUpdateService): Promise<ResponseTemplateInterface> {
     const responseUpdate = await new PrismaServiceRepository().update(id, updateData)
-console.log(responseUpdate);
     if (!responseUpdate.status) {
       await new CreateLog().execute(responseUpdate);
     }
-
     return responseUpdate;
   }
 }

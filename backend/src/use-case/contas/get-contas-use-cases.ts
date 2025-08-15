@@ -1,13 +1,25 @@
-import { CreateLog } from "../logs/create-log"; 
-import { ResponseTemplateInterface } from "../../interfaces/response-template-interface";
+import { CreateLog } from "../logs/create-log";
 import { PrismaContaRepository } from "../../db/prisma/respositories/prisma-contas-repository";
+import { ResponseTemplateInterface } from "../../interfaces/response-template-interface";
 
-export class GetAllContas {
+export class GetAllContasWithClienteName {
   async execute(): Promise<ResponseTemplateInterface> {
-    const response = await new PrismaContaRepository().getAll();
-    if (!response.status) {
-      await new CreateLog().execute(response);
+    try {
+      const response = await new PrismaContaRepository().fetchContasWithCliente();
+
+      if (!response.status) {
+        await new CreateLog().execute(response);
+      }
+
+      return response;
+    } catch (error) {
+      console.error(error);
+      return {
+        status: false,
+        code: 500,
+        message: "Erro ao buscar contas",
+        data: null,
+      };
     }
-    return response;
   }
 }

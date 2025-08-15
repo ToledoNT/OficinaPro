@@ -23,24 +23,20 @@ export class PrismaServiceRepository {
   }
 
   async update(id: string, updateData: IUpdateService): Promise<ResponseTemplateInterface> {
-    // Remover o 'id' do updateData, pois o 'id' não pode ser alterado
-    const { id: _, ...updateFields } = updateData;  // Remover o 'id'
+    const { id: _, ...updateFields } = updateData;  
   
     try {
-      console.log('Campos para atualização:', updateFields);  // Para depuração
+      console.log('Campos para atualização:', updateFields);
   
-      // Executando a atualização no Prisma, passando apenas os campos que podem ser alterados
       const response = await prisma.service.update({
         where: {
-          id,  // ID do serviço a ser atualizado
+          id,  
         },
-        data: updateFields,  // Passa apenas os dados que foram recebidos, sem o 'id'
+        data: updateFields,  
       });
   
-      // Retorno do sucesso na atualização
       return new ResponseTemplateModel(true, 200, "Serviço atualizado com sucesso", response);
     } catch (error) {
-      // Em caso de erro, logar o erro e retornar uma resposta de erro
       console.error("Erro ao atualizar serviço:", error);
       return new ResponseTemplateModel(false, 500, "Erro ao atualizar serviço", []);
     }
