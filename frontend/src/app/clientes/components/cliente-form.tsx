@@ -1,4 +1,3 @@
-// src/app/clientes/components/ClienteForm.tsx
 'use client';
 
 import { Card, CardContent } from "../components/ui/card";

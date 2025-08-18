@@ -29,7 +29,7 @@ export class ApiService {
     try {
       const response = await this.api.post<{ status: boolean; message: string; user?: IFetchUser }>(
         "/user/login",
-        { user, password } // agora o nome coincide com o esperado pelo backend
+        { user, password } 
       );
   
       if (response.data.status) {
@@ -59,7 +59,6 @@ export class ApiService {
     }
   }
   
-
   // ---------------- CLIENTES ----------------
   async getClientes(): Promise<Cliente[]> {
     try {
@@ -97,7 +96,6 @@ export class ApiService {
   async deleteCliente(id: string): Promise<ApiResponseDeleteResponse> {
     try {
       const response = await this.api.delete<ApiResponseDeleteResponse>(`/client/deleteclient/${id}`);
-      console.log("Resposta da API:", response);
       return response.data;
     } catch (error) {
       console.error("Erro ao deletar cliente:", error);
@@ -206,7 +204,6 @@ export class ApiService {
   async getContas(): Promise<Conta[]> {
     try {
       const response = await this.api.get<{ status: boolean; data: Conta[]; message?: string }>("/contas/allcontas");
-      console.log(response);
       if (response.data.status) {
         return response.data.data || [];
       } else {
@@ -222,7 +219,6 @@ export class ApiService {
   async registerConta(data: IRegisterContaData): Promise<ApiResponseCliente> {
     try {
       const response = await this.api.post<ApiResponseCliente>("/conta/createconta", data);
-      console.log("chegou")
       return response.data;
     } catch (error) {
       return this.handleError(error, "Erro ao registrar conta");

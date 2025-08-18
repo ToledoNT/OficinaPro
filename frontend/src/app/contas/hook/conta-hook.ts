@@ -6,9 +6,6 @@ import { ApiResponseDeleteConta, Conta, IRegisterContaData } from "@/app/interfa
 
 const api = new ApiService();
 
-// ========================
-// Hook: Clientes
-// ========================
 export function useClientes() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loadingClientes, setLoadingClientes] = useState(false);
@@ -19,7 +16,6 @@ export function useClientes() {
     setErrorClientes(null);
     try {
       const data = await api.getClientes();
-      console.log(data);
       setClientes(data);
       return data;
     } catch (e) {
@@ -34,9 +30,6 @@ export function useClientes() {
   return { clientes, loadingClientes, errorClientes, fetchClientes };
 }
 
-// ========================
-// Hook: Serviços por Cliente
-// ========================
 export function useServicosPorCliente() {
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [loading, setLoading] = useState(false);
@@ -59,10 +52,6 @@ export function useServicosPorCliente() {
   return { servicos, loading, error, fetchServicos };
 }
 
-
-// ========================
-// Hook: Contas
-// ========================
 export function useContas() {
   const [contas, setContas] = useState<Conta[]>([]);
   const [loadingContas, setLoadingContas] = useState(false);
@@ -127,10 +116,7 @@ export function useContas() {
       return { success: false, message: "Erro ao deletar conta." };
     }
   };
-  
-  
-
-  return {
+    return {
     contas,
     loadingContas,
     errorContas,

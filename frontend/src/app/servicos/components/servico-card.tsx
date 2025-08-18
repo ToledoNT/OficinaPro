@@ -1,12 +1,7 @@
-import { Servico, STATUS_OPTIONS } from "@/app/interfaces/service-interface";
+import { ServicoCardProps, STATUS_OPTIONS } from "@/app/interfaces/service-interface";
 import { StatusBadge } from "./status-badge";
 import { Button } from "@/app/clientes/components/ui/button";
 
-interface ServicoCardProps {
-  servico: Servico;
-  onEdit: () => void;
-  onStatusChange: (status: string) => void;
-}
 
 export const ServicoCard = ({ servico, onEdit, onStatusChange }: ServicoCardProps) => {
   return (

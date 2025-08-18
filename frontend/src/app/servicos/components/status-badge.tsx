@@ -1,9 +1,5 @@
-import { StatusType } from "@/app/interfaces/service-interface";
+import { StatusBadgeProps } from "@/app/interfaces/service-interface";
 import { STATUS_STYLES } from "../utils/service-utils";
-
-interface StatusBadgeProps {
-  status: StatusType;
-}
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {
   const style = STATUS_STYLES[status];

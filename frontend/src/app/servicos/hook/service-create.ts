@@ -10,7 +10,6 @@ import {
 } from "@/app/interfaces/service-interface";
 import { ApiResponse } from "@/app/interfaces/response-interface"; // genérico ApiResponse<T>
 
-// Type guard genérico para ApiResponse<T> com data não nulo
 function hasData<T>(response: ApiResponse<T>): response is ApiResponse<T> & { data: NonNullable<T> } {
   return response.data !== undefined && response.data !== null;
 }
@@ -32,7 +31,6 @@ export const useServicos = () => {
         const listaClientes: Cliente[] = await api.getClientes();
         const listaServicos: Servico[] = await api.getServicos();
 
-        // Mapear serviços para incluir o nome do cliente pelo clienteId
         const servicosComClienteNome = listaServicos.map((servico) => {
           const clienteEncontrado = listaClientes.find(
             (cliente) => cliente.id === servico.clienteId
@@ -105,7 +103,6 @@ export const useServicos = () => {
     try {
       const api = new ApiService();
       const response = await api.updateService({ id, status });
-      console.log(response + "Chegou")  
 
       if (response.status) {
         setServicos((prev) =>
@@ -161,4 +158,4 @@ export const useServicos = () => {
     deletarServico,
     criarServicoVazio: createEmptyService,
   };
-};
+}

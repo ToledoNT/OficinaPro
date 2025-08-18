@@ -13,7 +13,7 @@ interface ClienteListProps {
   onEditCliente: (cliente: Cliente) => void;
   onDeleteCliente: (id: string) => Promise<void>;
   onBackToHome: () => void;
-  fetchClientes?: () => Promise<void>; // função opcional para buscar clientes
+  fetchClientes?: () => Promise<void>; 
 }
 
 export const ClienteList = ({
@@ -72,7 +72,7 @@ export const ClienteList = ({
 
     try {
       if (fetchClientes) {
-        await fetchClientes(); // busca os clientes antes de remover o loading
+        await fetchClientes(); 
       }
     } catch (err) {
       const errorMessage =

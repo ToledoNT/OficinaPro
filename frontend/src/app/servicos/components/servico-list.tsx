@@ -12,7 +12,6 @@ import {
 import { Cliente } from "@/app/interfaces/clientes-interface";
 import { STATUS_STYLES } from "../utils/service-utils";
 
-// Função para formatar data e hora no formato pt-BR
 const formatDateTime = (date: string) => {
   return new Date(date).toLocaleString("pt-BR", {
     day: "2-digit",

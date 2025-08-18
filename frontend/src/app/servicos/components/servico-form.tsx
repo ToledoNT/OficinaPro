@@ -6,16 +6,8 @@ import { Input } from "@/app/clientes/components/ui/input";
 import { Label } from "@/app/clientes/components/ui/label";
 import { Textarea } from "@/app/clientes/components/ui/textarea";
 import { Cliente, Veiculo } from "@/app/interfaces/clientes-interface";
-import { Servico, STATUS_OPTIONS, PRIORITY_OPTIONS } from "@/app/interfaces/service-interface";
+import { Servico, STATUS_OPTIONS, PRIORITY_OPTIONS, ServicoFormProps } from "@/app/interfaces/service-interface";
 import { useState, useEffect } from "react";
-
-interface ServicoFormProps {
-  servico: Servico;
-  clientes: Cliente[];
-  onSave: (servico: Servico) => void;
-  onCancel: () => void;
-  loading?: boolean;
-}
 
 export const ServicoForm = ({ servico, clientes, onSave, onCancel, loading = false }: ServicoFormProps) => {
   const [formData, setFormData] = useState<Servico>(servico);
