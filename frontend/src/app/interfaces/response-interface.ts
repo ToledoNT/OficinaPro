@@ -20,4 +20,3 @@ export interface ApiResponseVoid {
 
 export type ApiResponseCliente = ApiResponse<Cliente>;
 export type ApiResponseClientes = ApiResponse<Cliente[]>;
-

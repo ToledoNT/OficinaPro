@@ -42,7 +42,6 @@ export const ClienteCard = ({
             variant="outline"
             className="text-yellow-400 border-yellow-400 hover:bg-yellow-600 hover:text-white text-xs px-3"
             onClick={() => {
-              console.log(`Botão Ver clicado para cliente ID: ${cliente.id}`);
               onView();
             }}
             disabled={loading}
@@ -53,7 +52,6 @@ export const ClienteCard = ({
           <Button
             className="bg-blue-500 text-xs px-3"
             onClick={() => {
-              console.log(`Botão Editar clicado para cliente ID: ${cliente.id}`);
               onEdit();
             }}
             disabled={loading}
@@ -65,7 +63,6 @@ export const ClienteCard = ({
   variant="outline"
   className="text-red-500 border-red-500 hover:bg-red-600 hover:text-white text-xs px-3"
   onClick={() => {
-    console.log('[DEBUG] Botão deletar clicado - ID:', cliente.id);
     onDelete(cliente.id);
   }}
   disabled={loading}

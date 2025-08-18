@@ -18,7 +18,6 @@ export const useClientes = () => {
 
   const api = useRef(new ApiService()).current;
 
-  // Função para carregar clientes da API e normalizar os dados
   const carregarClientes = async () => {
     try {
       const lista = await api.getClientes();
@@ -28,17 +27,14 @@ export const useClientes = () => {
     }
   };
 
-  // Carrega clientes na montagem do hook
   useEffect(() => {
     carregarClientes();
   }, []);
 
-  // Filtra clientes pelo nome com base no filtro
   const clientesFiltrados = clientes.filter((c) =>
     c.nome.toLowerCase().includes(filtro.toLowerCase())
   );
 
-  // Função para preparar veículos antes de enviar para o backend
   const prepararVeiculosParaEnvio = (veiculos: Veiculo[] = []) => {
     return veiculos.map((v) => ({
       ...v,
@@ -46,7 +42,6 @@ export const useClientes = () => {
     }));
   };
 
-  // Função para salvar cliente (novo ou edição)
   const salvarCliente = async () => {
     if (!clienteAtual.nome.trim()) {
       alert("O nome do cliente é obrigatório.");
@@ -83,7 +78,6 @@ export const useClientes = () => {
             : "Cliente atualizado com sucesso!"
         );
 
-        // Recarrega toda a lista após salvar, para garantir estado atualizado
         await carregarClientes();
 
         setClienteAtual(criarClienteVazio());
@@ -99,12 +93,10 @@ export const useClientes = () => {
     }
   };
 
-  // Função para deletar cliente
   const deletarCliente = async (id: string) => {
     setLoadingDelete(true);
     try {
       const result: ApiResponseDeleteResponse = await api.deleteCliente(id);
-      console.log(result);
 
       const isSuccess =
         result.status ||

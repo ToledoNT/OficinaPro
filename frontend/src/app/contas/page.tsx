@@ -42,7 +42,6 @@ export default function Contas() {
   const inputClass =
     'bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 caret-white focus:outline-none focus:ring-2 focus:ring-blue-500';
 
-  // ---------- Funções ----------
   const limparFormulario = () => {
     setContaAtual({
       id: undefined,
@@ -129,8 +128,6 @@ export default function Contas() {
       alert('Erro ao salvar/atualizar conta: ' + (resultado.message ?? ''));
     }
   };
-
-  // ---------- JSX ----------
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
       <div className="max-w-6xl mx-auto">
