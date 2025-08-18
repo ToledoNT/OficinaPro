@@ -6,8 +6,85 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  // Função de login
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (username === 'admin' && password === '1234') {
+      setLoggedIn(true);
+      setError('');
+    } else {
+      setError('Usuário ou senha incorretos');
+    }
+  };
+
+  // Tela de login
+  if (!loggedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] px-6">
+        <motion.form
+          onSubmit={handleLogin}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="bg-gradient-to-br from-[#1e293b]/90 via-[#0f172a]/90 to-[#1e293b]/90 p-8 rounded-3xl shadow-2xl w-full max-w-md flex flex-col gap-6 border border-cyan-400/30 backdrop-blur-md"
+        >
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/arquivo.jpeg"
+              alt="Logo da Oficina"
+              width={140}
+              height={90}
+              className="drop-shadow-xl"
+            />
+          </div>
+          <h1 className="text-3xl font-extrabold text-center text-cyan-400">Bem-vindo!</h1>
+          <p className="text-gray-300 text-center mb-4">Faça login para acessar o sistema</p>
+          {error && <p className="text-red-500 text-center font-semibold">{error}</p>}
+          <input
+            type="text"
+            placeholder="Usuário"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="p-4 rounded-xl bg-gray-800/70 border border-cyan-400/40 placeholder-gray-400 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 transition"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="p-4 rounded-xl bg-gray-800/70 border border-cyan-400/40 placeholder-gray-400 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 transition"
+            required
+          />
+          <button
+            type="submit"
+            className="bg-cyan-500 hover:bg-cyan-600 transition-colors p-4 rounded-xl font-bold text-white shadow-lg hover:shadow-xl"
+          >
+            Entrar
+          </button>
+        </motion.form>
+      </div>
+    );
+  }
+
+  // Tela principal após login
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white relative">
+
+      {/* Botão de Logout */}
+      <button
+        onClick={() => setLoggedIn(false)}
+        className="absolute top-5 right-5 bg-red-500 hover:bg-red-600 transition-colors px-4 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl"
+      >
+        Sair
+      </button>
+
       {/* Logo, Título e Relógio */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
@@ -70,13 +147,25 @@ export default function Home() {
       </motion.main>
 
       {/* Rodapé */}
-      <footer className="mt-16 text-xs text-gray-400">
-        © {new Date().getFullYear()} OficinaPro · Desenvolvido por Francis
+      <footer className="mt-16 border-t border-gray-700 pt-4 text-gray-400 text-sm flex flex-col md:flex-row justify-between items-center">
+        <span>© {new Date().getFullYear()} OficinaPro</span>
+        <span className="mt-2 md:mt-0">
+          Desenvolvido por{" "}
+          <a
+            href="https://www.linkedin.com/in/francis-toledo-461033260/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-400 font-bold hover:underline"
+          >
+            Toledo Software
+          </a>
+        </span>
       </footer>
     </div>
   );
 }
 
+// Clock
 function Clock() {
   const [time, setTime] = useState<string>(() => formatTime(new Date()));
 
@@ -137,10 +226,12 @@ function Clock() {
   );
 }
 
+// Formatação de hora
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("pt-BR", { hour12: false });
 }
 
+// Botões de módulos
 type ModuleProps = {
   href: string;
   title: string;

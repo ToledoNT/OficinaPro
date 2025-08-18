@@ -50,28 +50,24 @@ export class PrismaContaRepository {
       return new ResponseTemplateModel(false, 500, "Erro ao atualizar conta", []);
     }
   }
-  async delete(id: string): Promise<ResponseTemplateInterface> {
+  
+  async deleteConta(id: string): Promise<ResponseTemplateInterface> {
     try {
-      // Deleta todas as contas vinculadas ao cliente
-      await prisma.conta.deleteMany({ where: { clienteId: id } });
+      // Deleta apenas a conta específica pelo ID
+      const response = await prisma.conta.delete({ where: { id } });
   
-      // Deleta todos os serviços vinculados ao cliente
-      await prisma.service.deleteMany({ where: { clienteId: id } });
-  
-      // Deleta o cliente
-      const response = await prisma.cliente.delete({ where: { id } });
-  
-      return new ResponseTemplateModel(true, 200, "Cliente deletado com sucesso", response);
+      return new ResponseTemplateModel(true, 200, "Conta deletada com sucesso", response);
     } catch (error: any) {
-      console.error("Erro ao deletar cliente:", error);
+      console.error("Erro ao deletar conta:", error);
   
       if (error.code === "P2025") {
-        return new ResponseTemplateModel(false, 404, "Cliente não encontrado para exclusão", []);
+        return new ResponseTemplateModel(false, 404, "Conta não encontrada para exclusão", []);
       }
   
-      return new ResponseTemplateModel(false, 500, "Erro ao deletar cliente", []);
+      return new ResponseTemplateModel(false, 500, "Erro ao deletar conta", []);
     }
   }
+  
   
   
 
@@ -100,14 +96,18 @@ export class PrismaContaRepository {
   
   async fetchContasWithCliente(): Promise<ResponseTemplateInterface> {
     try {
-      const contas = await prisma.conta.findMany({ include: { cliente: true } });
-
+      // Busca todas as contas, incluindo cliente de forma segura
+      const contas = await prisma.conta.findMany({
+        include: { cliente: true } // cliente é opcional agora
+      });
+  
+      // Mapeia as contas para o formato que a API espera
       const contasComNomes: IFetchConta[] = contas.map(conta => ({
         id: conta.id,
         dataPagamento: conta.dataPagamento,
-        clienteId: conta.clienteId,
-        clienteNome: conta.cliente?.nome ?? "", 
-        descricao: conta.descricao ?? "",      
+        clienteId: conta.clienteId ?? "",       // seguro caso clienteId seja null
+        clienteNome: conta.cliente?.nome ?? "", // seguro caso cliente seja null
+        descricao: conta.descricao ?? "",
         categoria: conta.categoria ?? "",
         tipo: conta.tipo as "A pagar" | "A receber",
         valor: conta.valor ?? "",
@@ -117,9 +117,13 @@ export class PrismaContaRepository {
         servicoVinculado: conta.servicoVinculado ?? "",
         servicoId: conta.servicoId ?? "",
       }));
-      
-
-      return new ResponseTemplateModel(true, 200, "Contas consultadas com sucesso", contasComNomes);
+  
+      return new ResponseTemplateModel(
+        true,
+        200,
+        "Contas consultadas com sucesso",
+        contasComNomes
+      );
     } catch (error) {
       console.error("Erro ao buscar contas:", error);
       return new ResponseTemplateModel(false, 500, "Erro ao buscar contas", []);

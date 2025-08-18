@@ -6,7 +6,7 @@ interface ClienteCardProps {
   cliente: Cliente;
   onView: () => void;
   onEdit: () => void;
-  onDelete: (id: string) => void; // ✅ Altere para receber o ID
+  onDelete: (id: string) => void; 
   loading?: boolean;
 }
 export const ClienteCard = ({

@@ -9,12 +9,12 @@ import { ContaForm } from './components/conta-form';
 import { useClientes, useContas, useServicosPorCliente } from './hook/conta-hook';
 import { Conta } from '@/app/interfaces/contas-interface';
 
-type ViewMode = '' | 'lista' | 'formulario' | 'visualizar';
+type ViewMode = 'lista' | 'formulario' | 'visualizar';
 
 export default function Contas() {
   const router = useRouter();
 
-  const [viewMode, setViewMode] = useState<ViewMode>('');
+  const [viewMode, setViewMode] = useState<ViewMode>('lista');
   const [contaAtual, setContaAtual] = useState<Conta>({
     id: undefined,
     dataPagamento: '',
@@ -39,6 +39,9 @@ export default function Contas() {
   const { contas, fetchContas, salvarConta, deletarConta, loadingContas } = useContas();
   const { servicos: servicosDoCliente, loading: loadingServicos } = useServicosPorCliente();
 
+  const inputClass =
+    'bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 caret-white focus:outline-none focus:ring-2 focus:ring-blue-500';
+
   // ---------- Funções ----------
   const limparFormulario = () => {
     setContaAtual({
@@ -57,7 +60,7 @@ export default function Contas() {
       servicoVinculado: '',
       clienteNome: '',
     });
-    setViewMode('');
+    setViewMode('lista');
   };
 
   const handleChange = <K extends keyof Conta>(
@@ -96,16 +99,15 @@ export default function Contas() {
     return textoMatch && statusMatch;
   });
 
-  // ---------- Funções de cálculo ----------
+  // ---------- Cálculo de valores ----------
   const parseValor = (valor: string | number | undefined) => {
     if (!valor) return 0;
     const numero = typeof valor === 'number' ? valor : Number(valor.toString().replace(',', '.'));
     return isNaN(numero) ? 0 : numero;
   };
 
-  const formatarValor = (valor: string | number | undefined) => {
-    return parseValor(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
+  const formatarValor = (valor: string | number | undefined) =>
+    parseValor(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   const totalPagar = contas
     .filter(c => c.tipo.toLowerCase() === 'a pagar' && !c.pago)
@@ -115,130 +117,116 @@ export default function Contas() {
     .filter(c => c.tipo.toLowerCase() === 'a receber' && !c.pago)
     .reduce((acc, cur) => acc + parseValor(cur.valor), 0);
 
-  const totalPago = contas
-    .filter(c => c.pago)
-    .reduce((acc, cur) => acc + parseValor(cur.valor), 0);
+  const totalPago = contas.filter(c => c.pago).reduce((acc, cur) => acc + parseValor(cur.valor), 0);
 
-  // ---------- Salvar ou atualizar conta ----------
   const onSalvarOuAtualizarConta = async (conta: Conta) => {
     const resultado = await salvarConta(conta);
     if (resultado.success) {
       alert(`Conta ${conta.id ? 'atualizada' : 'salva'} com sucesso!`);
       limparFormulario();
       await fetchContas();
-      setViewMode('lista');
     } else {
       alert('Erro ao salvar/atualizar conta: ' + (resultado.message ?? ''));
     }
   };
 
-  const inputClass =
-    'bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 caret-white focus:outline-none focus:ring-2 focus:ring-blue-500';
-
-  // ---------- Render ----------
+  // ---------- JSX ----------
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
       <div className="max-w-6xl mx-auto">
         {/* Botões principais */}
-        <div className="flex flex-wrap gap-4 mb-4">
-          <Button
-            onClick={async () => {
-              await fetchContas();
-              setViewMode('lista');
-            }}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            Ver Contas
-          </Button>
-          <Button
-            onClick={() => {
-              limparFormulario();
-              setViewMode('formulario');
-            }}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            Cadastrar Conta
-          </Button>
-          <Button
-            variant="outline"
-            className="border border-gray-500 text-gray-200 hover:bg-gray-700"
-            onClick={() => router.push('/')}
-          >
-            ← Voltar para Início
-          </Button>
-        </div>
+        {viewMode === 'lista' && (
+          <div className="flex flex-wrap gap-4 mb-4">
+            <Button
+              onClick={async () => {
+                await fetchContas();
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Ver Contas
+            </Button>
+            <Button
+              onClick={() => {
+                limparFormulario();
+                setViewMode('formulario');
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Cadastrar Conta
+            </Button>
+            <Button
+              variant="outline"
+              className="border border-gray-500 text-gray-200 hover:bg-gray-700"
+              onClick={() => router.push('/')}
+            >
+              ← Voltar para tela inicial
+            </Button>
+          </div>
+        )}
 
         {/* Lista */}
         {viewMode === 'lista' && (
           <>
+            <div className="mb-4 flex flex-wrap items-center gap-6">
+              <Input
+                value={filtro}
+                onChange={e => setFiltro(e.target.value)}
+                placeholder="Buscar cliente, descrição, valor ou categoria..."
+                className={`${inputClass} max-w-sm`}
+              />
+              <select
+                className={`${inputClass} py-2 px-3 rounded max-w-xs`}
+                value={statusFiltro}
+                onChange={e =>
+                  setStatusFiltro(e.target.value as 'todos' | 'pagas' | 'naoPagas')
+                }
+              >
+                <option value="todos">Todos</option>
+                <option value="pagas">Pagas</option>
+                <option value="naoPagas">Não Pagas</option>
+              </select>
+            </div>
+
+            <div className="mb-4 space-x-4 text-gray-300">
+              <span><strong>Total a pagar:</strong> {formatarValor(totalPagar)}</span>
+              <span><strong>Total a receber:</strong> {formatarValor(totalReceber)}</span>
+              <span><strong>Total pago:</strong> {formatarValor(totalPago)}</span>
+            </div>
+
             {loadingContas ? (
-              <p>Carregando contas...</p>
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-cyan-400 border-b-4 border-gray-600"></div>
+              </div>
+            ) : contasFiltradas.length === 0 ? (
+              <p className="text-gray-400">Nenhuma conta encontrada.</p>
             ) : (
-              <>
-                <div className="mb-4 flex flex-wrap items-center gap-6">
-                  <Input
-                    value={filtro}
-                    onChange={e => setFiltro(e.target.value)}
-                    placeholder="Buscar cliente, descrição, valor ou categoria..."
-                    className={`${inputClass} max-w-sm`}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {contasFiltradas.map(c => (
+                  <ContaCard
+                    key={c.id ?? Math.random()}
+                    conta={c}
+                    formatarValor={formatarValor}
+                    onVer={() => visualizarConta(c)}
+                    onEditar={contaSelecionada => {
+                      setContaAtual(contaSelecionada);
+                      setViewMode('formulario');
+                    }}
+                    onExcluir={async () => {
+                      if (!c.id) return;
+                      const confirm = window.confirm('Tem certeza que deseja excluir esta conta?');
+                      if (!confirm) return;
+                      const resultado = await deletarConta(c.id);
+                      if (resultado.success) {
+                        alert('Conta excluída com sucesso!');
+                        await fetchContas();
+                      } else {
+                        alert('Erro ao excluir conta: ' + (resultado.message ?? ''));
+                      }
+                    }}
+                    loading={false}
                   />
-                  <select
-                    className={`${inputClass} py-2 px-3 rounded max-w-xs`}
-                    value={statusFiltro}
-                    onChange={e => setStatusFiltro(e.target.value as 'todos' | 'pagas' | 'naoPagas')}
-                  >
-                    <option value="todos">Todos</option>
-                    <option value="pagas">Pagas</option>
-                    <option value="naoPagas">Não Pagas</option>
-                  </select>
-                  <div className="space-x-4 text-gray-300">
-                    <span>
-                      <strong>Total a pagar:</strong> {formatarValor(totalPagar)}
-                    </span>
-                    <span>
-                      <strong>Total a receber:</strong> {formatarValor(totalReceber)}
-                    </span>
-                    <span>
-                      <strong>Total pago:</strong> {formatarValor(totalPago)}
-                    </span>
-                  </div>
-                </div>
-
-                <p className="mb-4 text-gray-300">Contas encontradas: {contasFiltradas.length}</p>
-
-                {contasFiltradas.length === 0 ? (
-                  <p className="text-gray-400">Nenhuma conta encontrada.</p>
-                ) : (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {contasFiltradas.map(c => (
-                      <ContaCard
-                        key={c.id ?? Math.random()}
-                        conta={c}
-                        formatarValor={formatarValor}
-                        onVer={() => visualizarConta(c)}
-                        onEditar={contaSelecionada => {
-                          setContaAtual(contaSelecionada);
-                          setViewMode('formulario');
-                        }}
-                        onExcluir={async () => {
-                          if (!c.id) return;
-                          const confirm = window.confirm('Tem certeza que deseja excluir esta conta?');
-                          if (!confirm) return;
-
-                          const resultado = await deletarConta(c.id);
-                          if (resultado.success) {
-                            alert('Conta excluída com sucesso!');
-                            await fetchContas();
-                          } else {
-                            alert('Erro ao excluir conta: ' + (resultado.message ?? ''));
-                          }
-                        }}
-                        loading={false}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
+                ))}
+              </div>
             )}
           </>
         )}
@@ -246,8 +234,16 @@ export default function Contas() {
         {/* Formulário */}
         {viewMode === 'formulario' && (
           <>
+            <div className="mb-4">
+              <Button variant="outline" onClick={limparFormulario}>
+                ← Voltar
+              </Button>
+            </div>
+
             {loadingClientes || loadingServicos ? (
-              <p>Carregando dados...</p>
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-cyan-400 border-b-4 border-gray-600"></div>
+              </div>
             ) : errorClientes ? (
               <p className="text-red-500">{errorClientes}</p>
             ) : (
@@ -269,21 +265,32 @@ export default function Contas() {
 
         {/* Visualizar */}
         {viewMode === 'visualizar' && (
-          <div className="bg-[#1e293b] border border-gray-700 rounded-md p-4 space-y-2 text-sm max-w-4xl mx-auto">
-            <div className="flex justify-between items-start gap-2">
-              <div>
-                <p><strong>Cliente:</strong> {contaAtual.clienteNome || '-'}</p>
-                <p><strong>Categoria:</strong> {contaAtual.categoria || '-'}</p>
-                <p><strong>Tipo:</strong> {contaAtual.tipo || '-'}</p>
-                <p><strong>Valor:</strong> {formatarValor(contaAtual.valor)}</p>
-                <p><strong>Pago:</strong> {contaAtual.pago ? 'Sim' : 'Não'}</p>
-                <p><strong>Data de Pagamento:</strong> {contaAtual.dataPagamento || '-'}</p>
-              </div>
+          <>
+            <div className="mb-4">
+              <Button variant="outline" onClick={() => setViewMode('lista')}>
+                ← Voltar
+              </Button>
             </div>
-            <p><strong>Descrição:</strong> {contaAtual.descricao || '-'}</p>
-            {contaAtual.observacoes && <p><strong>Observações:</strong> {contaAtual.observacoes}</p>}
-            {contaAtual.temServico && <p><strong>Serviço vinculado:</strong> {contaAtual.servicoVinculado || `ID: ${contaAtual.servicoId}`}</p>}
-          </div>
+            <div className="bg-[#1e293b] border border-gray-700 rounded-md p-4 space-y-2 text-sm max-w-4xl mx-auto">
+              <div className="flex justify-between items-start gap-2">
+                <div>
+                  <p><strong>Cliente:</strong> {contaAtual.clienteNome || '-'}</p>
+                  <p><strong>Categoria:</strong> {contaAtual.categoria || '-'}</p>
+                  <p><strong>Tipo:</strong> {contaAtual.tipo || '-'}</p>
+                  <p><strong>Valor:</strong> {formatarValor(contaAtual.valor)}</p>
+                  <p><strong>Pago:</strong> {contaAtual.pago ? 'Sim' : 'Não'}</p>
+                  <p><strong>Data de Pagamento:</strong> {contaAtual.dataPagamento || '-'}</p>
+                </div>
+              </div>
+              <p><strong>Descrição:</strong> {contaAtual.descricao || '-'}</p>
+              {contaAtual.observacoes && <p><strong>Observações:</strong> {contaAtual.observacoes}</p>}
+              {contaAtual.temServico && (
+                <p>
+                  <strong>Serviço vinculado:</strong> {contaAtual.servicoVinculado || `ID: ${contaAtual.servicoId}`}
+                </p>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>
