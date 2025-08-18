@@ -2,7 +2,7 @@ export class CreateServiceModel {
   id?: string;
   clienteId: string;
   veiculo?: string;
-  dataCadastro?: Date; // aqui o nome correto
+  dataCadastro?: Date; 
 
   descricao: string;
   finalizado: boolean;

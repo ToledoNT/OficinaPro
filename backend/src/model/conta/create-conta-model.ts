@@ -1,7 +1,7 @@
 export class CreateContaModel {
   id?: number;
   dataPagamento: string;
-  clienteId?: string | null; // Pode ser null
+  clienteId?: string | null; 
   cliente: string;
   descricao: string;
   categoria: string;
@@ -10,23 +10,23 @@ export class CreateContaModel {
   pago: boolean;
   observacoes: string;
   temServico: boolean;
-  servicoVinculado?: string; // Agora servicoVinculado é opcional
-  servicoId?: string; // Adicionando servicoId
+  servicoVinculado?: string; 
+  servicoId?: string; 
 
   constructor(data: Partial<CreateContaModel>) {
     this.id = data.id;
-    this.dataPagamento = data.dataPagamento ?? new Date().toISOString(); // Se não passar, coloca data atual
-    this.clienteId = data.clienteId ?? null; // Permite null
-    this.cliente = data.cliente ?? 'Cliente Desconhecido'; // Se não passar, valor padrão
-    this.descricao = data.descricao ?? 'Descrição não fornecida'; // Valor padrão
-    this.categoria = data.categoria ?? 'Serviço'; // Valor padrão
-    this.tipo = data.tipo ?? 'A pagar'; // Se não passar, 'A pagar' como padrão
-    this.valor = data.valor ?? '0'; // Valor padrão
-    this.pago = data.pago ?? false; // Padrão como não pago
-    this.observacoes = data.observacoes ?? ''; // Observação padrão vazia
-    this.temServico = data.temServico ?? true; // Assumindo que "temServico" é verdadeiro por padrão
-    this.servicoVinculado = data.servicoVinculado ?? ''; // Serviço vinculado, pode ser vazio
-    this.servicoId = data.servicoId ?? undefined; // Garantir que servicoId seja undefined se não passado
+    this.dataPagamento = data.dataPagamento ?? new Date().toISOString(); 
+    this.clienteId = data.clienteId ?? null; 
+    this.cliente = data.cliente ?? 'Cliente Desconhecido'; 
+    this.descricao = data.descricao ?? 'Descrição não fornecida'; 
+    this.categoria = data.categoria ?? 'Serviço'; 
+    this.tipo = data.tipo ?? 'A pagar'; 
+    this.valor = data.valor ?? '0'; 
+    this.pago = data.pago ?? false; 
+    this.observacoes = data.observacoes ?? ''; 
+    this.temServico = data.temServico ?? true; 
+    this.servicoVinculado = data.servicoVinculado ?? ''; 
+    this.servicoId = data.servicoId ?? undefined; 
   }
 
   toPayload() {

@@ -95,13 +95,12 @@ export class PrismaClientRepository {
         return new ResponseTemplateModel(false, 404, "Usuário não encontrado", null);
       }
   
-      // Desestrutura id fora, para garantir que ele não vai para o Prisma
       const { id, endereco, veiculos, ...rest } = value;
   
       const dataForPrisma: any = {
         ...rest,
         ...(endereco ? { endereco: { set: endereco } } : undefined),
-        ...(veiculos ? { veiculos: { set: veiculos } } : undefined), // ajuste correto aqui
+        ...(veiculos ? { veiculos: { set: veiculos } } : undefined), 
       };
   
       const response = await prisma.cliente.update({

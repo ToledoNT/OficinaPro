@@ -7,7 +7,7 @@ import { Label } from '../clientes/components/ui/label';
 import { Button } from '../clientes/components/ui/button';
 import { Card, CardContent } from '../clientes/components/ui/card';
 import { RelatorioItem } from '../interfaces/relatorio-interface';
-import { ApiService } from '@/api/api-requests';
+import { ApiService } from '@/app/api/api-requests';
 
 export default function Relatorios() {
   const router = useRouter();

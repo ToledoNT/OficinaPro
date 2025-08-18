@@ -28,7 +28,6 @@ export class UpdateClientModel implements IUpdateClient {
   constructor(data: Partial<IUpdateClient> & { id: string }) {
     this.id = data.id;
 
-    // Campos simples
     if (data.nome?.trim()) this.nome = data.nome.trim();
     if (data.telefone?.trim()) this.telefone = data.telefone.trim();
     if (data.isWhatsapp !== undefined) this.isWhatsapp = data.isWhatsapp;
@@ -37,7 +36,6 @@ export class UpdateClientModel implements IUpdateClient {
     if (data.observacoes?.trim()) this.observacoes = data.observacoes.trim();
     if (data.dataCadastro) this.dataCadastro = data.dataCadastro;
 
-    // Endereço
     if (data.endereco) {
       const enderecoFiltrado: Partial<IUpdateClient["endereco"]> = {};
       Object.entries(data.endereco).forEach(([key, value]) => {
@@ -48,7 +46,6 @@ export class UpdateClientModel implements IUpdateClient {
       if (Object.keys(enderecoFiltrado).length > 0) this.endereco = enderecoFiltrado;
     }
 
-    // Veículos
     if (Array.isArray(data.veiculos)) {
       const veiculosFiltrados = data.veiculos
         .map(v => {

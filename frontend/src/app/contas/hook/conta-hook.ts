@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Cliente } from "@/app/interfaces/clientes-interface";
 import { Servico } from "@/app/interfaces/service-interface";
-import { ApiService } from "@/api/api-requests";
+import { ApiService } from "@/app/api/api-requests";
 import { ApiResponseDeleteConta, Conta, IRegisterContaData } from "@/app/interfaces/contas-interface";
 
 const api = new ApiService();

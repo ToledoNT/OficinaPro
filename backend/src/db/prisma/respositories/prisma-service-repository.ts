@@ -38,15 +38,12 @@ export class PrismaServiceRepository {
       "pago",
     ];
   
-    // Cria objeto somente com campos definidos
     const updateFields: Record<string, any> = {};
     for (const key of allowedFields) {
       if (data[key] !== undefined) {
-        updateFields[key] = data[key]; // TypeScript não reclama mais
+        updateFields[key] = data[key]; 
       }
     }
-  
-    // Atualiza no banco
     const response = await prisma.service.update({
       where: { id },
       data: updateFields,
@@ -54,9 +51,6 @@ export class PrismaServiceRepository {
   
     return new ResponseTemplateModel(true, 200, "Serviço atualizado com sucesso", response);
   }
-  
-  
-
   
   async delete(id: string): Promise<ResponseTemplateInterface> {
     try {

@@ -1,252 +1,207 @@
 'use client';
 
-import Image from "next/image";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Lock, Eye, EyeOff, LogIn, Loader2, User } from 'lucide-react';
+import { ApiService } from './api/api-requests';
 
-export default function Home() {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+export default function LoginPage() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
+  const [showPwd, setShowPwd] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
 
-  // Função de login
-  const handleLogin = (e: React.FormEvent) => {
+  const apiService = new ApiService();
+
+  // Check auth status and redirect if already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          // You might want to add token validation here
+          router.replace('/home');
+        } catch (err) {
+          localStorage.removeItem('user');
+        }
+      }
+    };
+    checkAuth();
+  }, [router]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
-    if (username === 'admin' && password === '1234') {
-      setLoggedIn(true);
-      setError('');
-    } else {
-      setError('Usuário ou senha incorretos');
+    // Validation
+    if (!formData.username.trim()) {
+      return setError('Informe seu usuário.');
+    }
+    if (formData.password.length < 6) {
+      return setError('A senha deve ter pelo menos 6 caracteres.');
+    }
+
+    try {
+      setLoading(true);
+      const response = await apiService.loginUser(formData.username, formData.password);
+      
+      if (!response) {
+        throw new Error('No response from server');
+      }
+
+      console.log('API Response:', response); // Debug log
+
+      if (response.user) {
+        // Store user data
+        const userData = {
+          id: response.user.id,
+          username: response.user.user,
+          // Add any other relevant user data
+        };
+
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // Redirect to home page
+        router.push('/home');
+      } else {
+        setError(response.message || 'Authentication failed. Please try again.');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      if (err instanceof Error) {
+        setError(err.message || 'Erro ao efetuar login. Tente novamente.');
+      } else {
+        setError('An unexpected error occurred');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Tela de login
-  if (!loggedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] px-6">
-        <motion.form
-          onSubmit={handleLogin}
-          initial={{ opacity: 0, scale: 0.9 }}
+  return (
+    <main className="min-h-screen w-full bg-[#0b0f14] text-gray-200 flex items-center justify-center p-4">
+      <div className="relative w-full max-w-md">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="bg-gradient-to-br from-[#1e293b]/90 via-[#0f172a]/90 to-[#1e293b]/90 p-8 rounded-3xl shadow-2xl w-full max-w-md flex flex-col gap-6 border border-cyan-400/30 backdrop-blur-md"
+          transition={{ duration: 0.4 }}
+          className="absolute -inset-1 rounded-3xl bg-gradient-to-b from-blue-500/20 to-transparent blur-2xl"
+          aria-hidden
+        />
+
+        <motion.section
+          initial={{ y: 12, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="relative rounded-3xl border p-6 sm:p-8 backdrop-blur bg-[#0f1720]/95 border-gray-800/15 shadow-2xl"
         >
-          <div className="flex justify-center mb-4">
-            <Image
-              src="/arquivo.jpeg"
-              alt="Logo da Oficina"
-              width={140}
-              height={90}
-              className="drop-shadow-xl"
-            />
-          </div>
-          <h1 className="text-3xl font-extrabold text-center text-cyan-400">Bem-vindo!</h1>
-          <p className="text-gray-300 text-center mb-4">Faça login para acessar o sistema</p>
-          {error && <p className="text-red-500 text-center font-semibold">{error}</p>}
-          <input
-            type="text"
-            placeholder="Usuário"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="p-4 rounded-xl bg-gray-800/70 border border-cyan-400/40 placeholder-gray-400 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 transition"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="p-4 rounded-xl bg-gray-800/70 border border-cyan-400/40 placeholder-gray-400 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 transition"
-            required
-          />
-          <button
-            type="submit"
-            className="bg-cyan-500 hover:bg-cyan-600 transition-colors p-4 rounded-xl font-bold text-white shadow-lg hover:shadow-xl"
-          >
-            Entrar
-          </button>
-        </motion.form>
-      </div>
-    );
-  }
-
-  // Tela principal após login
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white relative">
-
-      {/* Botão de Logout */}
-      <button
-        onClick={() => setLoggedIn(false)}
-        className="absolute top-5 right-5 bg-red-500 hover:bg-red-600 transition-colors px-4 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl"
-      >
-        Sair
-      </button>
-
-      {/* Logo, Título e Relógio */}
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between w-full max-w-3xl mb-12"
-      >
-        <div className="flex items-center gap-4">
-          <div className="flex justify-center">
-            <Image
-              src="/arquivo.jpeg"
-              alt="Logo da Oficina"
-              width={150}
-              height={100}
-              className="drop-shadow-xl"
-            />
-          </div>
-          <div>
-            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-cyan-400">
-              OficinaPro
-            </h1>
-            <p className="text-gray-300 mt-2 text-sm sm:text-base">
-              Sistema interno da sua oficina de motos
+          <header className="mb-6">
+            <h1 className="text-2xl font-semibold tracking-tight">Bem-vindo de volta</h1>
+            <p className="mt-1 text-sm text-gray-400">
+              Entre para continuar gerenciando seus serviços.
             </p>
-          </div>
-        </div>
+          </header>
 
-        <Clock />
-      </motion.header>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-4">
+              <label className="block text-sm">
+                <span className="mb-1 inline-flex items-center gap-2 text-gray-300">
+                  <User className="h-4 w-4 opacity-80" /> Usuário
+                </span>
+                <input
+                  type="text"
+                  name="username"
+                  autoComplete="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  placeholder="Seu Usuário"
+                  className="mt-1 w-full rounded-xl border bg-transparent px-3 py-2.5 text-sm outline-none transition placeholder:text-gray-500 border-gray-800/15 focus:ring-2 focus:ring-blue-500/40"
+                />
+              </label>
 
-      {/* Módulos */}
-      <motion.main
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-3xl"
-      >
-        <ModuleButton
-          href="/clientes"
-          icon="🧑‍🔧"
-          title="Clientes"
-          color="from-cyan-500 to-blue-600"
-        />
-        <ModuleButton
-          href="/servicos"
-          icon="💪"
-          title="Serviços"
-          color="from-green-500 to-emerald-600"
-        />
-        <ModuleButton
-          href="/contas"
-          icon="💰"
-          title="Contas"
-          color="from-rose-500 to-pink-600"
-        />
-        <ModuleButton
-          href="/relatorio"
-          icon="📊"
-          title="Relatórios"
-          color="from-amber-400 to-orange-500"
-        />
-      </motion.main>
+              <label className="block text-sm">
+                <span className="mb-1 inline-flex items-center gap-2 text-gray-300">
+                  <Lock className="h-4 w-4 opacity-80" /> Senha
+                </span>
+                <div className="relative">
+                  <input
+                    type={showPwd ? 'text' : 'password'}
+                    name="password"
+                    autoComplete="current-password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="••••••••"
+                    className="mt-1 w-full rounded-xl border bg-transparent px-3 py-2.5 pr-10 text-sm outline-none transition placeholder:text-gray-500 border-gray-800/15 focus:ring-2 focus:ring-blue-500/40"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-2 my-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                    aria-label={showPwd ? 'Esconder senha' : 'Mostrar senha'}
+                    onClick={() => setShowPwd(!showPwd)}
+                  >
+                    {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </label>
+            </div>
 
-      {/* Rodapé */}
-      <footer className="mt-16 border-t border-gray-700 pt-4 text-gray-400 text-sm flex flex-col md:flex-row justify-between items-center">
-        <span>© {new Date().getFullYear()} OficinaPro</span>
-        <span className="mt-2 md:mt-0">
-          Desenvolvido por{" "}
-          <a
-            href="https://www.linkedin.com/in/francis-toledo-461033260/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-cyan-400 font-bold hover:underline"
-          >
-            Toledo Software
-          </a>
-        </span>
-      </footer>
-    </div>
-  );
-}
+            <div className="flex items-center justify-between">
+              <label className="inline-flex items-center gap-2 text-xs text-gray-400 select-none">
+                <input 
+                  type="checkbox" 
+                  checked={rememberMe}
+                  onChange={() => setRememberMe(!rememberMe)}
+                  className="h-4 w-4 rounded border-gray-800/15 bg-transparent" 
+                />
+                Lembrar-me
+              </label>
+            </div>
 
-// Clock
-function Clock() {
-  const [time, setTime] = useState<string>(() => formatTime(new Date()));
+            {error && (
+              <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+                {error}
+              </div>
+            )}
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(formatTime(new Date()));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+            <button
+              type="submit"
+              disabled={loading}
+              className="group inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 bg-blue-500 hover:bg-blue-600 text-white focus:ring-blue-500/30 disabled:opacity-60"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Entrando...
+                </>
+              ) : (
+                <>
+                  <LogIn className="h-4 w-4" />
+                  Entrar
+                </>
+              )}
+            </button>
+          </form>
+        </motion.section>
 
-  return (
-    <div
-      className="
-        flex items-center gap-1.5 sm:gap-2
-        bg-white/10 backdrop-blur-md rounded-xl
-        px-3 sm:px-5 py-1
-        shadow-lg
-        min-w-[110px] sm:min-w-[150px]
-        select-none
-        max-w-full
-        overflow-x-auto
-      "
-      style={{ WebkitOverflowScrolling: "touch" }}
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400 flex-shrink-0"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-        aria-hidden="true"
-      >
-        <circle
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="2"
-          fill="none"
-        />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
-      </svg>
-      <span
-        className="
-          font-mono text-cyan-300 font-semibold tracking-widest
-          text-xs sm:text-sm md:text-base
-          whitespace-nowrap
-          max-w-full
-          overflow-hidden
-          text-ellipsis
-        "
-        title={time}
-      >
-        {time}
-      </span>
-    </div>
-  );
-}
-
-// Formatação de hora
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString("pt-BR", { hour12: false });
-}
-
-// Botões de módulos
-type ModuleProps = {
-  href: string;
-  title: string;
-  icon: string;
-  color: string;
-};
-
-function ModuleButton({ href, title, icon, color }: ModuleProps) {
-  return (
-    <Link
-      href={href}
-      className={`bg-gradient-to-br ${color} text-white font-semibold p-6 rounded-2xl flex flex-col items-center justify-center text-center transition-transform hover:scale-105 shadow-lg shadow-black/20 hover:shadow-black/30`}
-    >
-      <div className="text-4xl mb-2 drop-shadow-md">{icon}</div>
-      <span className="text-lg tracking-wide">{title}</span>
-    </Link>
+        <footer className="mt-6 text-center text-[10px] text-gray-500">
+          © {new Date().getFullYear()} OficinaPro · Todos os direitos reservados
+        </footer>
+      </div>
+    </main>
   );
 }
