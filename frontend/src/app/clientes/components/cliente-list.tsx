@@ -13,6 +13,7 @@ interface ClienteListProps {
   onEditCliente: (cliente: Cliente) => void;
   onDeleteCliente: (id: string) => Promise<void>;
   onBackToHome: () => void;
+  fetchClientes?: () => Promise<void>; // função opcional para buscar clientes
 }
 
 export const ClienteList = ({
@@ -24,13 +25,13 @@ export const ClienteList = ({
   onEditCliente,
   onDeleteCliente,
   onBackToHome,
+  fetchClientes,
 }: ClienteListProps) => {
   const [loadingDeleteId, setLoadingDeleteId] = useState<string | null>(null);
+  const [loadingClientes, setLoadingClientes] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [clienteToDelete, setClienteToDelete] = useState<string | null>(null);
-
-  // Estado para controlar se vai exibir os clientes
   const [mostrarClientes, setMostrarClientes] = useState(false);
 
   const handleDeleteClick = (id: string) => {
@@ -65,15 +66,59 @@ export const ClienteList = ({
     setClienteToDelete(null);
   };
 
+  const handleVerClientes = async () => {
+    setLoadingClientes(true);
+    setMostrarClientes(true);
+
+    try {
+      if (fetchClientes) {
+        await fetchClientes(); // busca os clientes antes de remover o loading
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Erro ao carregar clientes";
+      setError(errorMessage);
+    } finally {
+      setLoadingClientes(false);
+    }
+  };
+
   return (
     <div className="space-y-6 p-4">
       {/* Barra de ações */}
       <div className="flex flex-wrap gap-4">
         <Button
-          className="bg-blue-600 hover:bg-blue-700 shadow"
-          onClick={() => setMostrarClientes(true)}
+          className="bg-blue-600 hover:bg-blue-700 shadow flex items-center justify-center"
+          onClick={handleVerClientes}
+          disabled={loadingClientes}
         >
-          Ver Clientes
+          {loadingClientes ? (
+            <div className="flex items-center space-x-2">
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                />
+              </svg>
+              <span>Carregando...</span>
+            </div>
+          ) : (
+            "Ver Clientes"
+          )}
         </Button>
 
         <Button
@@ -88,7 +133,7 @@ export const ClienteList = ({
           onClick={onBackToHome}
           className="hover:bg-gray-700"
         >
-          ← Voltar
+          ← Voltar para tela inicial
         </Button>
       </div>
 
@@ -124,18 +169,44 @@ export const ClienteList = ({
                 Cancelar
               </Button>
               <Button
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 flex items-center justify-center"
                 onClick={handleDeleteConfirm}
                 disabled={loadingDeleteId !== null}
               >
-                {loadingDeleteId ? "Excluindo..." : "Confirmar"}
+                {loadingDeleteId ? (
+                  <div className="flex items-center space-x-2">
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      />
+                    </svg>
+                    <span>Excluindo...</span>
+                  </div>
+                ) : (
+                  "Confirmar"
+                )}
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Lista de clientes (aparece só depois de clicar no botão) */}
+      {/* Lista de clientes */}
       {mostrarClientes && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {clientes.length === 0 ? (

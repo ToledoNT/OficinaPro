@@ -10,18 +10,17 @@ datasource db {
 model Cliente {
   id           String    @id @default(auto()) @map("_id") @db.ObjectId
   nome         String
-  telefone     String?       // Agora é opcional
-  isWhatsapp   Boolean?      // Opcional
-  cpf          String?       // Opcional
+  telefone     String?       
+  isWhatsapp   Boolean?      
+  cpf          String?       
   email        String?
-  endereco     Endereco?     // Opcional
-  observacoes  String?       // Opcional
+  endereco     Endereco?     
+  observacoes  String?       
   dataCadastro DateTime      @default(now())
   veiculos     Veiculo[]
   services     Service[] @relation("ClienteToService")
   contas       Conta[]   @relation("ClienteToConta")
 }
-
 
 type Endereco {
   rua     String
@@ -56,23 +55,29 @@ model Service {
 }
 
 model Conta {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  dataPagamento   String
-  clienteId       String   @db.ObjectId
-  cliente         Cliente  @relation(fields: [clienteId], references: [id], name: "ClienteToConta")
-  descricao       String
-  categoria       String
-  tipo            String   
-  valor           String
-  pago            Boolean
-  observacoes     String
-  temServico      Boolean
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  dataPagamento    String
+  clienteId        String?  @db.ObjectId
+  cliente          Cliente? @relation(fields: [clienteId], references: [id], name: "ClienteToConta")
+  descricao        String
+  categoria        String
+  tipo             String   
+  valor            String
+  pago             Boolean
+  observacoes      String
+  temServico       Boolean
   servicoVinculado String?
-  servicoId String?
+  servicoId        String?
 }
 
 model Log {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   value     String
   createdAt DateTime @default(now())
+}
+
+model User {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  user     String
+  password String
 }

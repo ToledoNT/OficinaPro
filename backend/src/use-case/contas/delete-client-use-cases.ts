@@ -4,7 +4,7 @@ import { PrismaContaRepository } from "../../db/prisma/respositories/prisma-cont
 
 export class DeleteConta {
   async execute(id: string): Promise<ResponseTemplateInterface> {
-    const responseCreate = await new PrismaContaRepository().delete(id)
+    const responseCreate = await new PrismaContaRepository().deleteConta(id)
     if (!responseCreate.status) {
       await new CreateLog().execute(responseCreate);
     }

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { Label } from '@/app/clientes/components/ui/label';
 import { Input } from '@/app/clientes/components/ui/input';
@@ -6,24 +8,16 @@ import { Textarea } from '@/app/clientes/components/ui/textarea';
 import { Button } from '@/app/clientes/components/ui/button';
 import { Card, CardContent } from '@/app/clientes/components/ui/card';
 import { Cliente } from '@/app/interfaces/clientes-interface';
-import { Conta, ContaFormProps } from '@/app/interfaces/contas-interface';
-import { Servico } from '@/app/interfaces/service-interface';
+import { ContaFormProps } from '@/app/interfaces/contas-interface';
 import { useClientes, useServicosPorCliente } from '../hook/conta-hook';
 
 const categorias = [
-  'Serviço',
-  'Peças',
-  'Material',
-  'Manutenção',
-  'Revisão',
-  'Troca de óleo',
-  'Pneus',
-  'Outros',
+  'Serviço', 'Peças', 'Material', 'Manutenção', 'Revisão',
+  'Troca de óleo', 'Pneus', 'Outros',
 ];
 
 export function ContaForm({
   conta,
-  inputClass,
   onChange,
   onChangeValue,
   onTogglePago,
@@ -31,19 +25,21 @@ export function ContaForm({
   onCancelar,
   onSalvar,
   readonly = false,
-}: ContaFormProps) {
-  const { clientes, loadingClientes, errorClientes, fetchClientes } = useClientes();
-  const { servicos, loading: loadingServicos, error: errorServicos, fetchServicos } = useServicosPorCliente();
+  loading = false, // adicionada a prop loading
+}: ContaFormProps & { loading?: boolean }) {
+  const { clientes, fetchClientes } = useClientes();
+  const { servicos, fetchServicos } = useServicosPorCliente();
 
   const [clienteBusca, setClienteBusca] = useState(conta.clienteNome || conta.cliente || '');
   const [clienteSugestoes, setClienteSugestoes] = useState<Cliente[]>([]);
 
-  // Atualiza campo cliente ao mudar conta
+  const inputClass =
+    "bg-[#1e293b] border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full p-2 rounded";
+
   useEffect(() => {
     setClienteBusca(conta.clienteNome || conta.cliente || '');
   }, [conta]);
 
-  // Sugestões de clientes conforme digitação
   useEffect(() => {
     if (!clientes || clientes.length === 0) return;
 
@@ -53,20 +49,19 @@ export function ContaForm({
       return;
     }
 
-    const resultados = clientes.filter((cliente) =>
-      cliente.nome.toLowerCase().includes(busca)
+    const resultados = clientes.filter(c =>
+      c.nome.toLowerCase().includes(busca)
     );
     setClienteSugestoes(resultados);
   }, [clienteBusca, clientes]);
 
-  // Mudança no input cliente
   const handleClienteBuscaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const valor = e.target.value;
     setClienteBusca(valor);
     onChangeValue('cliente', valor);
 
     const clienteEncontrado = clientes.find(
-      (c) => c.nome.toLowerCase() === valor.trim().toLowerCase()
+      c => c.nome.toLowerCase() === valor.trim().toLowerCase()
     );
 
     if (clienteEncontrado) {
@@ -89,7 +84,6 @@ export function ContaForm({
     if (clientes.length === 0) await fetchClientes();
   };
 
-  // Validação e envio
   const handleSalvar = () => {
     if (!conta.clienteId) { alert('Selecione um cliente válido.'); return; }
     if (!conta.dataPagamento.trim()) { alert('O campo Data de Pagamento é obrigatório.'); return; }
@@ -109,7 +103,7 @@ export function ContaForm({
           {conta.id ? 'Editar Conta' : 'Cadastrar Conta'}
         </h2>
 
-        {/* Input Cliente */}
+        {/* Cliente */}
         <div className="relative">
           <Label htmlFor="clienteBusca">Cliente *</Label>
           <Input
@@ -122,11 +116,9 @@ export function ContaForm({
             autoComplete="off"
             disabled={readonly}
           />
-          {loadingClientes && <p className="absolute text-gray-500 mt-1">Carregando...</p>}
-          {errorClientes && <p className="absolute text-red-500 mt-1">{errorClientes}</p>}
           {clienteSugestoes.length > 0 && (
             <ul className="absolute z-10 bg-white text-black w-full mt-1 border border-gray-300 rounded shadow-lg max-h-40 overflow-y-auto">
-              {clienteSugestoes.map((c) => (
+              {clienteSugestoes.map(c => (
                 <li
                   key={c.id}
                   className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
@@ -139,12 +131,13 @@ export function ContaForm({
           )}
         </div>
 
-        {/* Switch e Select de Serviços */}
+        {/* Switch Tem Serviço */}
         <div className="flex items-center space-x-2">
           <Switch checked={conta.temServico} onCheckedChange={onToggleTemServico} disabled={readonly} />
           <Label htmlFor="temServico">Tem serviço?</Label>
         </div>
 
+        {/* Serviço Vinculado */}
         {conta.temServico && (
           <div>
             <Label htmlFor="servicoVinculado">Serviço Vinculado *</Label>
@@ -153,20 +146,16 @@ export function ContaForm({
               value={conta.servicoId ?? ''}
               onChange={(e) => {
                 const idSelecionado = e.target.value;
-                const servicoSelecionado = servicos.find((s) => s.id === idSelecionado);
+                const servicoSelecionado = servicos.find(s => s.id === idSelecionado);
                 onChangeValue('servicoId', idSelecionado);
                 onChangeValue('servicoVinculado', servicoSelecionado?.descricao || '');
               }}
-              className={`${inputClass} w-full px-3 py-2 rounded`}
+              className={inputClass}
               disabled={readonly}
             >
               <option value="">Selecione um serviço</option>
-              {loadingServicos && <option>Carregando serviços...</option>}
-              {errorServicos && <option disabled>{errorServicos}</option>}
-              {servicos.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.descricao} - {s.status}
-                </option>
+              {servicos.map(s => (
+                <option key={s.id} value={s.id}>{s.descricao} - {s.status}</option>
               ))}
             </select>
           </div>
@@ -205,13 +194,11 @@ export function ContaForm({
             id="categoria"
             value={conta.categoria}
             onChange={(e) => onChange(e, 'categoria')}
-            className={`${inputClass} w-full px-3 py-2 rounded`}
+            className={inputClass}
             disabled={readonly}
           >
-            {categorias.map((categoria) => (
-              <option key={categoria} value={categoria}>
-                {categoria}
-              </option>
+            {categorias.map(c => (
+              <option key={c} value={c}>{c}</option>
             ))}
           </select>
         </div>
@@ -223,7 +210,7 @@ export function ContaForm({
             id="tipo"
             value={conta.tipo}
             onChange={(e) => onChange(e, 'tipo')}
-            className={`${inputClass} w-full px-3 py-2 rounded`}
+            className={inputClass}
             disabled={readonly}
           >
             <option value="">Selecione o tipo</option>
@@ -247,11 +234,7 @@ export function ContaForm({
 
         {/* Pago */}
         <div className="flex items-center space-x-2">
-          <Switch
-            checked={conta.pago || false}
-            onCheckedChange={onTogglePago}
-            disabled={readonly}
-          />
+          <Switch checked={conta.pago || false} onCheckedChange={onTogglePago} disabled={readonly} />
           <Label htmlFor="pago">Pago?</Label>
         </div>
 
@@ -268,12 +251,19 @@ export function ContaForm({
         </div>
 
         {/* Botões */}
-        <div className="flex space-x-4">
-          <Button onClick={onCancelar} variant="outline" disabled={readonly}>
+        <div className="flex justify-end space-x-4 pt-4 border-t border-gray-700">
+          <Button variant="outline" onClick={onCancelar} disabled={readonly || loading}>
             Cancelar
           </Button>
-          <Button onClick={handleSalvar} variant="solid" disabled={readonly}>
-            Salvar
+          <Button onClick={handleSalvar} disabled={readonly || loading} className="relative">
+            {loading ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                {conta.id ? 'Salvando...' : 'Cadastrando...'}
+              </div>
+            ) : (
+              conta.id ? 'Salvar' : 'Cadastrar'
+            )}
           </Button>
         </div>
       </CardContent>

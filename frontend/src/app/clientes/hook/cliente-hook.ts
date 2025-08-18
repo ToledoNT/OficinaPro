@@ -104,6 +104,7 @@ export const useClientes = () => {
     setLoadingDelete(true);
     try {
       const result: ApiResponseDeleteResponse = await api.deleteCliente(id);
+      console.log(result);
 
       const isSuccess =
         result.status ||
