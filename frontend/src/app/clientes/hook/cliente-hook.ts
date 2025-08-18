@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ApiService } from "@/api/api-requests";
+import { ApiService } from "@/app/api/api-requests";
 import { Cliente, ViewMode, Veiculo } from "@/app/interfaces/clientes-interface";
 import { ApiResponseCliente, ApiResponseDeleteResponse } from "@/app/interfaces/response-interface";
 import { criarClienteVazio, normalizarCliente } from "../utils/cliente-utills";

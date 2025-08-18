@@ -11,4 +11,3 @@ interface ServiceResponse {
     valor: string;
     pago: boolean;
   }
-  

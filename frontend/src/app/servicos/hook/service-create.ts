@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { ApiService } from "@/api/api-requests";
+import { ApiService } from "@/app/api/api-requests";
 import { Cliente } from "@/app/interfaces/clientes-interface";
 import {
   createEmptyService,

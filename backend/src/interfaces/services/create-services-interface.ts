@@ -1,6 +1,6 @@
 export interface ICreateService {
-    id?: string;             // id opcional para criação
-    clienteId: string;       // id do cliente obrigatório
+    id?: string;            
+    clienteId: string;       
     veiculo?: string;
     descricao: string;
     finalizado: boolean;
@@ -10,4 +10,3 @@ export interface ICreateService {
     valor?: string;
     pago?: boolean;
   }
-  

@@ -8,7 +8,6 @@ export class GetServiceByIdController {
         res.status(400).send({ code: 400, message: "ID do cliente é obrigatório" });
         return;
       }
-  
       const resultado = await new GetServicesByClientID().execute(id);
       res.status(resultado.code).send(resultado);
     }

@@ -7,6 +7,7 @@ import {
 import { ApiResponseCliente, ApiResponseClientes, ApiResponseDeleteResponse } from "@/app/interfaces/response-interface";
 import { IRegisterServiceData, IUpdateServiceData, Servico } from "@/app/interfaces/service-interface";
 import { IRegisterContaData, Conta, ApiResponseDeleteConta } from "@/app/interfaces/contas-interface";
+import { IFetchUser } from "../interfaces/user-interface";
 
 const apiBaseURL = "http://localhost:4001/api";
 
@@ -19,8 +20,47 @@ export class ApiService {
       headers: { "Content-Type": "application/json" },
     });
   }
+  
+  // ---------------- LOGIN ----------------
+  async loginUser(
+    user: string,
+    password: string
+  ): Promise<{ status: boolean; message: string; user?: IFetchUser }> {
+    try {
+      const response = await this.api.post<{ status: boolean; message: string; user?: IFetchUser }>(
+        "/user/login",
+        { user, password } // agora o nome coincide com o esperado pelo backend
+      );
+  
+      if (response.data.status) {
+        return {
+          status: true,
+          message: response.data.message,
+          user: response.data.user, 
+        };
+      } else {
+        return {
+          status: false,
+          message: response.data.message || "Erro ao efetuar login",
+        };
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return {
+          status: false,
+          message: error.response?.data?.message || `Erro ao efetuar login: ${error.message}`,
+        };
+      }
+  
+      return {
+        status: false,
+        message: "Erro desconhecido ao efetuar login",
+      };
+    }
+  }
+  
 
-  // Clientes
+  // ---------------- CLIENTES ----------------
   async getClientes(): Promise<Cliente[]> {
     try {
       const response = await this.api.get<ApiResponseClientes>("/client/allclients");
@@ -65,7 +105,7 @@ export class ApiService {
     }
   }
 
-  // Serviços
+  // ---------------- SERVIÇOS ----------------
   async getServicos(): Promise<Servico[]> {
     try {
       const response = await this.api.get<{
@@ -109,20 +149,17 @@ export class ApiService {
     }
   }
   
-async updateService(
-    dados: IUpdateServiceData
-  ): Promise<{ status: boolean; message?: string }> {
+  async updateService(dados: IUpdateServiceData): Promise<{ status: boolean; message?: string }> {
     try {
       if (!dados.id) {
         throw new Error("ID do serviço é obrigatório para atualização.");
       }
       const { id, ...dataToUpdate } = dados;
 
-      const response = await this.api.put<{
-        status: boolean;
-        message?: string;
-        data?: Servico;
-      }>(`/service/updateservice/${id}`, dataToUpdate);
+      const response = await this.api.put<{ status: boolean; message?: string; data?: Servico }>(
+        `/service/updateservice/${id}`,
+        dataToUpdate
+      );
 
       const { status, message } = response.data;
 
@@ -165,7 +202,7 @@ async updateService(
     }
   }
 
-  // Contas
+  // ---------------- CONTAS ----------------
   async getContas(): Promise<Conta[]> {
     try {
       const response = await this.api.get<{ status: boolean; data: Conta[]; message?: string }>("/contas/allcontas");
@@ -206,7 +243,6 @@ async updateService(
       const response = await this.api.delete<ApiResponseDeleteConta>(`/conta/deleteconta/${id}`);
       return response.data; // agora response.data tem o tipo correto
     } catch (error) {
-      // Se precisar tratar erro, converta para ApiResponseDeleteConta
       return {
         mensagem: "Erro ao deletar conta",
         dados: {
@@ -219,7 +255,7 @@ async updateService(
     }
   }
 
-  // Tratamento de erro genérico
+  // ---------------- ERRO GENÉRICO ----------------
   private handleError(error: unknown, defaultMessage: string): ApiResponseCliente {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError<{ message?: string }>;

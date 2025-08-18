@@ -20,13 +20,11 @@ export class CreateContaController {
     const createContaModel = new CreateContaModel({ ...userData });
     const payload = createContaModel.toPayload() as ICreateConta;
     const createdAccount = await new CreateConta().execute(payload);
-
     res.status(201).send({
       status: true,
       message: 'Conta criada com sucesso.',
       data: createdAccount,
     });
-
     if (servicoId) {
     const updateData: IUpdateService = {
         valor,   

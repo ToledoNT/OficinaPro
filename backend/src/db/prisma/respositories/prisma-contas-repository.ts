@@ -29,16 +29,13 @@ export class PrismaContaRepository {
   }
   async update(id: string, data: Partial<IUpdateConta>): Promise<ResponseTemplateInterface> {
     try {
-      // Remove 'id' e campos que não existem no Prisma
       const { id: _, clienteNome, ...payload } = data as any;
   
-      // Se houver clienteId, transforma em relação de conexão do Prisma
       if (payload.clienteId) {
         payload.cliente = { connect: { id: payload.clienteId } };
         delete payload.clienteId;
       }
   
-      // Atualiza a conta
       const response = await prisma.conta.update({
         where: { id },
         data: payload,
@@ -53,7 +50,6 @@ export class PrismaContaRepository {
   
   async deleteConta(id: string): Promise<ResponseTemplateInterface> {
     try {
-      // Deleta apenas a conta específica pelo ID
       const response = await prisma.conta.delete({ where: { id } });
   
       return new ResponseTemplateModel(true, 200, "Conta deletada com sucesso", response);
@@ -68,9 +64,6 @@ export class PrismaContaRepository {
     }
   }
   
-  
-  
-
   async findById(id: string): Promise<ResponseTemplateInterface> {
     try {
       const response = await prisma.conta.findUnique({ where: { id } });
@@ -96,17 +89,15 @@ export class PrismaContaRepository {
   
   async fetchContasWithCliente(): Promise<ResponseTemplateInterface> {
     try {
-      // Busca todas as contas, incluindo cliente de forma segura
       const contas = await prisma.conta.findMany({
-        include: { cliente: true } // cliente é opcional agora
+        include: { cliente: true }
       });
   
-      // Mapeia as contas para o formato que a API espera
       const contasComNomes: IFetchConta[] = contas.map(conta => ({
         id: conta.id,
         dataPagamento: conta.dataPagamento,
-        clienteId: conta.clienteId ?? "",       // seguro caso clienteId seja null
-        clienteNome: conta.cliente?.nome ?? "", // seguro caso cliente seja null
+        clienteId: conta.clienteId ?? "",       
+        clienteNome: conta.cliente?.nome ?? "", 
         descricao: conta.descricao ?? "",
         categoria: conta.categoria ?? "",
         tipo: conta.tipo as "A pagar" | "A receber",

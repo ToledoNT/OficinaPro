@@ -6,7 +6,6 @@ import { ICreateClient } from "../../interfaces/cliente/create-cliente-interface
 export class CreateClientController {
   async handle(req: Request, res: Response): Promise<void> {
     const userData = req.body;
-
     if (!userData?.nome) {
       res.status(400).send({
         code: 400,

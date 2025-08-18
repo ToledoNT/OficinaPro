@@ -5,7 +5,6 @@ import { IUpdateService } from "../../interfaces/services/update-service-interfa
 export class UpdateServiceController {
   async handle(req: Request, res: Response): Promise<void> {
     const id = req.params?.id;
-
     if (!id) {
       res.status(400).send({
         code: 400,
@@ -13,9 +12,7 @@ export class UpdateServiceController {
       });
       return;
     }
-
     const updateData: IUpdateService = req.body;
-
     if (!updateData || Object.keys(updateData).length === 0) {
       res.status(400).send({
         code: 400,
@@ -23,9 +20,7 @@ export class UpdateServiceController {
       });
       return;
     }
-
     const updated = await new UpdateService().execute(id, updateData);
-
     res
       .status(typeof updated.code === "number" ? updated.code : 200)
       .send(updated);

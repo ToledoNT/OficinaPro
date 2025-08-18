@@ -27,7 +27,6 @@ export class UpdateServiceModel {
     this.pago = data.pago;
   }
 
-  // Método toPayload para transformar em um formato adequado para o banco de dados
   toPayload(): Partial<IUpdateService> {
     const payload: Partial<IUpdateService> = {};
 

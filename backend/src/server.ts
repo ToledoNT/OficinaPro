@@ -4,6 +4,7 @@ import Status from "./router/status-router";
 import ClienteRoute from "./router/cliente-route"
 import ServiceRoute from "./router/service-router"
 import ContaRoute from "./router/contas-route"
+import UserRoute from "./router/user-route"
 
 const server = express();
 
@@ -21,5 +22,6 @@ server.use("/api", Status);
 server.use("/api", ClienteRoute);
 server.use("/api", ServiceRoute);
 server.use("/api", ContaRoute);
+server.use("/api", UserRoute);
 
 export { server };
