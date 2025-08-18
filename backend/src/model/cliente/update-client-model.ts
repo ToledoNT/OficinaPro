@@ -27,55 +27,68 @@ export class UpdateClientModel implements IUpdateClient {
 
   constructor(data: Partial<IUpdateClient> & { id: string }) {
     this.id = data.id;
-    this.nome = data.nome;
-    this.telefone = data.telefone;
-    this.isWhatsapp = data.isWhatsapp;
-    this.cpf = data.cpf;
-    this.email = data.email;
-    this.endereco = data.endereco;
-    this.observacoes = data.observacoes;
-    this.dataCadastro = data.dataCadastro;
-    this.veiculos = data.veiculos?.map((v) => ({
-      placa: v.placa,
-      modelo: v.modelo,
-      ano: v.ano,
-      cor: v.cor,
-      chassi: v.chassi,
-    }));
+
+    // Campos simples
+    if (data.nome?.trim()) this.nome = data.nome.trim();
+    if (data.telefone?.trim()) this.telefone = data.telefone.trim();
+    if (data.isWhatsapp !== undefined) this.isWhatsapp = data.isWhatsapp;
+    if (data.cpf?.trim()) this.cpf = data.cpf.trim();
+    if (data.email?.trim()) this.email = data.email.trim();
+    if (data.observacoes?.trim()) this.observacoes = data.observacoes.trim();
+    if (data.dataCadastro) this.dataCadastro = data.dataCadastro;
+
+    // Endereço
+    if (data.endereco) {
+      const enderecoFiltrado: Partial<IUpdateClient["endereco"]> = {};
+      Object.entries(data.endereco).forEach(([key, value]) => {
+        if (value?.trim()) {
+          enderecoFiltrado[key as keyof typeof enderecoFiltrado] = value;
+        }
+      });
+      if (Object.keys(enderecoFiltrado).length > 0) this.endereco = enderecoFiltrado;
+    }
+
+    // Veículos
+    if (Array.isArray(data.veiculos)) {
+      const veiculosFiltrados = data.veiculos
+        .map(v => {
+          if (!v.modelo?.trim()) return null; // modelo obrigatório
+          const veiculo: { modelo: string; placa?: string; ano?: string; cor?: string; chassi?: string } = {
+            modelo: v.modelo.trim(),
+          };
+          if (v.placa?.trim()) veiculo.placa = v.placa.trim();
+          if (v.ano?.trim()) veiculo.ano = v.ano.trim();
+          if (v.cor?.trim()) veiculo.cor = v.cor.trim();
+          if (v.chassi?.trim()) veiculo.chassi = v.chassi.trim();
+          return veiculo;
+        })
+        .filter((v): v is NonNullable<typeof v> => v !== null);
+
+      if (veiculosFiltrados.length > 0) this.veiculos = veiculosFiltrados;
+    }
   }
 
   toPayload(): Partial<IUpdateClient> {
     const payload: Partial<IUpdateClient> = {};
 
-    if (this.nome !== undefined) payload.nome = this.nome;
-    if (this.telefone !== undefined) payload.telefone = this.telefone;
+    if (this.nome) payload.nome = this.nome;
+    if (this.telefone) payload.telefone = this.telefone;
     if (this.isWhatsapp !== undefined) payload.isWhatsapp = this.isWhatsapp;
-    if (this.cpf !== undefined) payload.cpf = this.cpf;
-    if (this.email !== undefined) payload.email = this.email;
-    if (this.endereco !== undefined) payload.endereco = { ...this.endereco };
-    if (this.observacoes !== undefined) payload.observacoes = this.observacoes;
-    if (this.dataCadastro !== undefined) payload.dataCadastro = this.dataCadastro;
+    if (this.cpf) payload.cpf = this.cpf;
+    if (this.email) payload.email = this.email;
+    if (this.endereco && Object.keys(this.endereco).length > 0) payload.endereco = { ...this.endereco };
+    if (this.observacoes) payload.observacoes = this.observacoes;
+    if (this.dataCadastro) payload.dataCadastro = this.dataCadastro;
 
-    if (this.veiculos?.length) {
-      const filteredVeiculos = this.veiculos.filter((v) => {
-        const isEmpty =
-          (!v.placa || v.placa.trim() === "") &&
-          (!v.modelo || v.modelo.trim() === "") &&
-          (!v.ano || v.ano.trim() === "") &&
-          (!v.cor || v.cor.trim() === "") &&
-          (!v.chassi || v.chassi.trim() === "");
-        return !isEmpty;
+    if (this.veiculos && this.veiculos.length > 0) {
+      payload.veiculos = this.veiculos.map(v => {
+        const veiculo: any = { modelo: v.modelo };
+        if (v.placa) veiculo.placa = v.placa;
+        if (v.ano) veiculo.ano = v.ano;
+        if (v.cor) veiculo.cor = v.cor;
+        if (v.chassi) veiculo.chassi = v.chassi;
+        return veiculo;
       });
-
-      if (filteredVeiculos.length > 0) {
-        payload.veiculos = filteredVeiculos.map((v) => ({
-          placa: v.placa,
-          modelo: v.modelo,
-          ano: v.ano,
-          cor: v.cor,
-          chassi: v.chassi,
-        }));
-      }
     }
 
     return payload;

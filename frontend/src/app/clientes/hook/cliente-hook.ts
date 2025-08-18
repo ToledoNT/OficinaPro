@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ApiService } from "@/api/api-requests";
-import { Cliente, ViewMode } from "@/app/interfaces/clientes-interface";
+import { Cliente, ViewMode, Veiculo } from "@/app/interfaces/clientes-interface";
 import { ApiResponseCliente, ApiResponseDeleteResponse } from "@/app/interfaces/response-interface";
-import { criarClienteVazio, filtrarVeiculosVazios, normalizarCliente } from "../utils/cliente-utills";
+import { criarClienteVazio, normalizarCliente } from "../utils/cliente-utills";
 
 export const useClientes = () => {
   const router = useRouter();
@@ -38,6 +38,14 @@ export const useClientes = () => {
     c.nome.toLowerCase().includes(filtro.toLowerCase())
   );
 
+  // Função para preparar veículos antes de enviar para o backend
+  const prepararVeiculosParaEnvio = (veiculos: Veiculo[] = []) => {
+    return veiculos.map((v) => ({
+      ...v,
+      placa: v.placa && v.placa.trim() !== "" ? v.placa : "Sem Placa",
+    }));
+  };
+
   // Função para salvar cliente (novo ou edição)
   const salvarCliente = async () => {
     if (!clienteAtual.nome.trim()) {
@@ -47,9 +55,9 @@ export const useClientes = () => {
 
     setLoadingSave(true);
 
-    const clienteParaEnviar = {
+    const clienteParaEnviar: Cliente = {
       ...clienteAtual,
-      veiculos: filtrarVeiculosVazios(clienteAtual.veiculos),
+      veiculos: prepararVeiculosParaEnvio(clienteAtual.veiculos),
     };
 
     try {
@@ -91,21 +99,20 @@ export const useClientes = () => {
     }
   };
 
+  // Função para deletar cliente
   const deletarCliente = async (id: string) => {
-  
     setLoadingDelete(true);
     try {
       const result: ApiResponseDeleteResponse = await api.deleteCliente(id);
-  
-      const isSuccess = result.status || 
+
+      const isSuccess =
+        result.status ||
         (result.mensagem && result.mensagem.toLowerCase().includes("sucesso"));
-  
+
       if (isSuccess) {
         alert(result.mensagem || "Cliente deletado com sucesso!");
-  
         setClientes((prev) => prev.filter((c) => c.id !== id));
         if (clienteVisualizar?.id === id) setClienteVisualizar(null);
-  
         await carregarClientes();
       } else {
         console.error("Erro ao deletar cliente:", result.mensagem || "Erro desconhecido");
@@ -116,9 +123,7 @@ export const useClientes = () => {
       setLoadingDelete(false);
     }
   };
-  
 
-  
   return {
     viewMode,
     setViewMode,

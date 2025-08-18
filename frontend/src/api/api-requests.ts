@@ -6,7 +6,7 @@ import {
 } from "@/app/interfaces/clientes-interface";
 import { ApiResponseCliente, ApiResponseClientes, ApiResponseDeleteResponse } from "@/app/interfaces/response-interface";
 import { IRegisterServiceData, IUpdateServiceData, Servico } from "@/app/interfaces/service-interface";
-import { IRegisterContaData, Conta } from "@/app/interfaces/contas-interface";
+import { IRegisterContaData, Conta, ApiResponseDeleteConta } from "@/app/interfaces/contas-interface";
 
 const apiBaseURL = "http://localhost:4001/api";
 
@@ -201,12 +201,21 @@ async updateService(
     }
   }
 
-  async deleteConta(id: number): Promise<ApiResponseCliente> {
+  async deleteConta(id: number): Promise<ApiResponseDeleteConta> {
     try {
-      const response = await this.api.delete<ApiResponseCliente>(`/conta/deleteconta/${id}`);
-      return response.data;
+      const response = await this.api.delete<ApiResponseDeleteConta>(`/conta/deleteconta/${id}`);
+      return response.data; // agora response.data tem o tipo correto
     } catch (error) {
-      return this.handleError(error, "Erro ao deletar conta");
+      // Se precisar tratar erro, converta para ApiResponseDeleteConta
+      return {
+        mensagem: "Erro ao deletar conta",
+        dados: {
+          status: false,
+          code: 500,
+          message: "Erro ao deletar conta",
+          data: null,
+        },
+      };
     }
   }
 

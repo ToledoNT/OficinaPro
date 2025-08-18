@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Cliente } from "@/app/interfaces/clientes-interface";
 import { Servico } from "@/app/interfaces/service-interface";
 import { ApiService } from "@/api/api-requests";
-import { Conta, IRegisterContaData } from "@/app/interfaces/contas-interface";
+import { ApiResponseDeleteConta, Conta, IRegisterContaData } from "@/app/interfaces/contas-interface";
 
 const api = new ApiService();
 
@@ -112,19 +112,23 @@ export function useContas() {
     }
   };
 
-  const deletarConta = async (id: number) => {
+  const deletarConta = async (id: number): Promise<{ success: boolean; message: string }> => {
     try {
-      const result = await api.deleteConta(id);
-      if (result.status) {
+      const result: ApiResponseDeleteConta = await api.deleteConta(id);
+  
+      if (result.dados.status) {
         setContas(prev => prev.filter(c => c.id !== id));
-        return { success: true };
+        return { success: true, message: result.dados.message };
       }
-      return { success: false, message: "Erro ao deletar conta." };
+  
+      return { success: false, message: result.dados.message || "Erro ao deletar conta." };
     } catch (e) {
-      console.error(e);
+      console.error("Erro ao deletar conta:", e);
       return { success: false, message: "Erro ao deletar conta." };
     }
   };
+  
+  
 
   return {
     contas,

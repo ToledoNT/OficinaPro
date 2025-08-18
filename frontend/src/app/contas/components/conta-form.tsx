@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/app/clientes/components/ui/card';
 import { Cliente } from '@/app/interfaces/clientes-interface';
 import { Conta, ContaFormProps } from '@/app/interfaces/contas-interface';
 import { Servico } from '@/app/interfaces/service-interface';
-import { useClientes, useContas, useServicosPorCliente } from '../hook/conta-hook';
+import { useClientes, useServicosPorCliente } from '../hook/conta-hook';
 
 const categorias = [
   'Serviço',
@@ -34,18 +34,16 @@ export function ContaForm({
 }: ContaFormProps) {
   const { clientes, loadingClientes, errorClientes, fetchClientes } = useClientes();
   const { servicos, loading: loadingServicos, error: errorServicos, fetchServicos } = useServicosPorCliente();
-  const { salvarConta } = useContas();
 
-  // Inicializa com o nome do cliente vindo da conta
   const [clienteBusca, setClienteBusca] = useState(conta.clienteNome || conta.cliente || '');
   const [clienteSugestoes, setClienteSugestoes] = useState<Cliente[]>([]);
 
-  // Sempre que a conta mudar, atualiza o campo de busca
+  // Atualiza campo cliente ao mudar conta
   useEffect(() => {
     setClienteBusca(conta.clienteNome || conta.cliente || '');
   }, [conta]);
 
-  // Atualiza sugestões de clientes conforme o usuário digita
+  // Sugestões de clientes conforme digitação
   useEffect(() => {
     if (!clientes || clientes.length === 0) return;
 
@@ -61,7 +59,7 @@ export function ContaForm({
     setClienteSugestoes(resultados);
   }, [clienteBusca, clientes]);
 
-  // Lida com mudanças no campo de busca do cliente
+  // Mudança no input cliente
   const handleClienteBuscaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const valor = e.target.value;
     setClienteBusca(valor);
@@ -87,58 +85,28 @@ export function ContaForm({
     fetchServicos(cliente.id);
   };
 
-  // Foca no campo cliente e carrega clientes se necessário
   const handleClienteFocus = async () => {
-    if (clientes.length === 0) {
-      await fetchClientes();
-    }
+    if (clientes.length === 0) await fetchClientes();
   };
 
-  // Lógica de salvar a conta
+  // Validação e envio
   const handleSalvar = () => {
-    if (!conta.clienteId) {
-      alert('Selecione um cliente válido.');
-      return;
-    }
-    if (!conta.dataPagamento.trim()) {
-      alert('O campo Data de Pagamento é obrigatório.');
-      return;
-    }
-    if (!conta.descricao.trim()) {
-      alert('O campo Descrição é obrigatório.');
-      return;
-    }
-    if (!conta.categoria.trim()) {
-      alert('O campo Categoria é obrigatório.');
-      return;
-    }
-    if (!conta.tipo.trim()) {
-      alert('O campo Tipo é obrigatório.');
-      return;
-    }
-    if (!conta.valor || Number(conta.valor) <= 0) {
-      alert('O campo Valor é obrigatório e deve ser maior que zero.');
-      return;
-    }
-    if (conta.temServico && !conta.servicoId) {
-      alert('Selecione um serviço válido.');
-      return;
-    }
+    if (!conta.clienteId) { alert('Selecione um cliente válido.'); return; }
+    if (!conta.dataPagamento.trim()) { alert('O campo Data de Pagamento é obrigatório.'); return; }
+    if (!conta.descricao.trim()) { alert('O campo Descrição é obrigatório.'); return; }
+    if (!conta.categoria.trim()) { alert('O campo Categoria é obrigatório.'); return; }
+    if (!conta.tipo.trim()) { alert('O campo Tipo de Conta é obrigatório.'); return; }
+    if (!conta.valor || Number(conta.valor) <= 0) { alert('O campo Valor é obrigatório e deve ser maior que zero.'); return; }
+    if (conta.temServico && !conta.servicoId) { alert('Selecione um serviço válido.'); return; }
 
-    salvarConta(conta).then((result) => {
-      if (result.success) {
-        onSalvar(conta);
-      } else {
-        alert(result.message || 'Erro ao salvar a conta.');
-      }
-    });
+    onSalvar(conta);
   };
 
   return (
     <Card className="bg-[#1e293b] p-6 border border-gray-700 max-w-3xl mx-auto mt-6">
       <CardContent className="space-y-6">
         <h2 className="text-2xl font-semibold">
-          {conta.id === 0 || conta.id === undefined ? 'Cadastrar Conta' : 'Editar Conta'}
+          {conta.id ? 'Editar Conta' : 'Cadastrar Conta'}
         </h2>
 
         {/* Input Cliente */}
@@ -248,6 +216,22 @@ export function ContaForm({
           </select>
         </div>
 
+        {/* Tipo de Conta */}
+        <div>
+          <Label htmlFor="tipo">Tipo de Conta *</Label>
+          <select
+            id="tipo"
+            value={conta.tipo}
+            onChange={(e) => onChange(e, 'tipo')}
+            className={`${inputClass} w-full px-3 py-2 rounded`}
+            disabled={readonly}
+          >
+            <option value="">Selecione o tipo</option>
+            <option value="A Pagar">A Pagar</option>
+            <option value="A Receber">A Receber</option>
+          </select>
+        </div>
+
         {/* Valor */}
         <div>
           <Label htmlFor="valor">Valor *</Label>
@@ -265,7 +249,7 @@ export function ContaForm({
         <div className="flex items-center space-x-2">
           <Switch
             checked={conta.pago || false}
-            onCheckedChange={(checked) => onChangeValue('pago', checked)}
+            onCheckedChange={onTogglePago}
             disabled={readonly}
           />
           <Label htmlFor="pago">Pago?</Label>
@@ -296,4 +280,3 @@ export function ContaForm({
     </Card>
   );
 }
-

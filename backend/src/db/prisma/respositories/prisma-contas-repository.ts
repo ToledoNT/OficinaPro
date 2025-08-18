@@ -27,40 +27,53 @@ export class PrismaContaRepository {
       return new ResponseTemplateModel(false, 500, "Erro ao criar conta", []);
     }
   }
-
   async update(id: string, data: Partial<IUpdateConta>): Promise<ResponseTemplateInterface> {
     try {
-      const payload: any = { ...data };
-
+      // Remove 'id' e campos que não existem no Prisma
+      const { id: _, clienteNome, ...payload } = data as any;
+  
+      // Se houver clienteId, transforma em relação de conexão do Prisma
       if (payload.clienteId) {
         payload.cliente = { connect: { id: payload.clienteId } };
         delete payload.clienteId;
       }
-
+  
+      // Atualiza a conta
       const response = await prisma.conta.update({
         where: { id },
         data: payload,
       });
-
+  
       return new ResponseTemplateModel(true, 200, "Conta atualizada com sucesso", response);
     } catch (error) {
       console.error("Erro ao atualizar conta:", error);
       return new ResponseTemplateModel(false, 500, "Erro ao atualizar conta", []);
     }
   }
-
   async delete(id: string): Promise<ResponseTemplateInterface> {
     try {
-      await prisma.conta.delete({ where: { id } });
-      return new ResponseTemplateModel(true, 200, "Conta deletada com sucesso", null);
+      // Deleta todas as contas vinculadas ao cliente
+      await prisma.conta.deleteMany({ where: { clienteId: id } });
+  
+      // Deleta todos os serviços vinculados ao cliente
+      await prisma.service.deleteMany({ where: { clienteId: id } });
+  
+      // Deleta o cliente
+      const response = await prisma.cliente.delete({ where: { id } });
+  
+      return new ResponseTemplateModel(true, 200, "Cliente deletado com sucesso", response);
     } catch (error: any) {
-      console.error("Erro ao deletar conta:", error);
+      console.error("Erro ao deletar cliente:", error);
+  
       if (error.code === "P2025") {
-        return new ResponseTemplateModel(false, 404, "Conta não encontrada para exclusão", []);
+        return new ResponseTemplateModel(false, 404, "Cliente não encontrado para exclusão", []);
       }
-      return new ResponseTemplateModel(false, 500, "Erro ao deletar conta", []);
+  
+      return new ResponseTemplateModel(false, 500, "Erro ao deletar cliente", []);
     }
   }
+  
+  
 
   async findById(id: string): Promise<ResponseTemplateInterface> {
     try {
@@ -84,6 +97,7 @@ export class PrismaContaRepository {
       return new ResponseTemplateModel(false, 500, "Erro ao listar contas", []);
     }
   }
+  
   async fetchContasWithCliente(): Promise<ResponseTemplateInterface> {
     try {
       const contas = await prisma.conta.findMany({ include: { cliente: true } });
@@ -92,17 +106,18 @@ export class PrismaContaRepository {
         id: conta.id,
         dataPagamento: conta.dataPagamento,
         clienteId: conta.clienteId,
-        clienteNome: conta.cliente?.nome || "",  
-        descricao: conta.descricao,
-        categoria: conta.categoria,
+        clienteNome: conta.cliente?.nome ?? "", 
+        descricao: conta.descricao ?? "",      
+        categoria: conta.categoria ?? "",
         tipo: conta.tipo as "A pagar" | "A receber",
-        valor: conta.valor,
-        pago: conta.pago,
-        observacoes: conta.observacoes,
-        temServico: conta.temServico,
-        servicoVinculado: conta.servicoVinculado ?? "", 
-        servicoId: conta.servicoId ?? "",              
+        valor: conta.valor ?? "",
+        pago: conta.pago ?? false,
+        observacoes: conta.observacoes ?? "",
+        temServico: conta.temServico ?? false,
+        servicoVinculado: conta.servicoVinculado ?? "",
+        servicoId: conta.servicoId ?? "",
       }));
+      
 
       return new ResponseTemplateModel(true, 200, "Contas consultadas com sucesso", contasComNomes);
     } catch (error) {

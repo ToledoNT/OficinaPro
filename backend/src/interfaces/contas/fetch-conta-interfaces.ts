@@ -13,4 +13,3 @@ export interface IFetchConta {
     servicoVinculado?: string | null;  
     servicoId?: string | null;         
   }
-  

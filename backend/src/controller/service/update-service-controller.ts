@@ -13,7 +13,9 @@ export class UpdateServiceController {
       });
       return;
     }
+
     const updateData: IUpdateService = req.body;
+
     if (!updateData || Object.keys(updateData).length === 0) {
       res.status(400).send({
         code: 400,
@@ -21,18 +23,11 @@ export class UpdateServiceController {
       });
       return;
     }
-    new UpdateService().execute(id, updateData)
-      .then((updated) => {
-        res
-          .status(typeof updated.code === "number" ? updated.code : 200)
-          .send(updated);
-      })
-      .catch((error) => {
-        res.status(500).send({
-          code: 500,
-          message: "Erro ao atualizar serviço.",
-          error: error instanceof Error ? error.message : String(error),
-        });
-      });
+
+    const updated = await new UpdateService().execute(id, updateData);
+
+    res
+      .status(typeof updated.code === "number" ? updated.code : 200)
+      .send(updated);
   }
 }
