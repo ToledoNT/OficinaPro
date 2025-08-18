@@ -52,3 +52,22 @@ export interface ContaFormProps {
   errorClientes?: string | null;
   readonly?: boolean; 
 }
+
+export interface ContaCardProps {
+  conta: Conta;
+  formatarValor: (valor: string) => string;
+  onVer: () => void;
+  onEditar: (conta: Conta) => void; 
+  onExcluir: (id: number) => void;  
+  loading?: boolean;
+}
+
+export interface ApiResponseDeleteConta {
+  mensagem: string;
+  dados: {
+    status: boolean;
+    code: number;
+    message: string;
+    data: null;
+  };
+}

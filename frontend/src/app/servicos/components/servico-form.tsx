@@ -143,20 +143,22 @@ export const ServicoForm = ({ servico, clientes, onSave, onCancel, loading }: Se
       </div>
 
       {/* Status */}
-      <div>
-        <Label htmlFor="status">Status *</Label>
-        <select
-          id="status"
-          value={formData.status}
-          onChange={(e) => handleChange("status", e.target.value as typeof STATUS_OPTIONS[number])}
-          required
-          className="w-full p-2 rounded bg-gray-700 text-white"
-        >
-          {STATUS_OPTIONS.map(s => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-      </div>
+  {/* Status */}
+<div>
+  <Label htmlFor="status">Status *</Label>
+  <select
+    id="status"
+    value={formData.status}
+    onChange={(e) => handleChange("status", e.target.value as typeof STATUS_OPTIONS[number])}
+    required
+    className="w-full p-2 rounded bg-gray-700 text-white"
+  >
+    {STATUS_OPTIONS.map(s => (
+      <option key={s} value={s}>{s}</option>
+    ))}
+  </select>
+</div>
+
 
       {/* Valor */}
       <div>
@@ -180,18 +182,6 @@ export const ServicoForm = ({ servico, clientes, onSave, onCancel, loading }: Se
           onChange={(e) => handleChange("observacoes", e.target.value)}
           rows={3}
         />
-      </div>
-
-      {/* Finalizado */}
-      <div className="flex items-center space-x-2">
-        <input
-          id="finalizado"
-          type="checkbox"
-          checked={formData.finalizado}
-          onChange={(e) => handleChange("finalizado", e.target.checked)}
-          className="w-4 h-4"
-        />
-        <Label htmlFor="finalizado" className="mb-0">Finalizado</Label>
       </div>
 
       {/* Pago */}

@@ -24,12 +24,12 @@ router.get(
 );
 
 router.put(
-  "/contas/atualizarconta/:id",
+  "/conta/updateconta/:id",
   updateContaController.handle.bind(updateContaController)
 );
 
 router.delete(
-  "/contas/deletecontas/:id",
+  "/conta/deleteconta/:id",
   deleteContaController.handle.bind(deleteContaController)
 );
 

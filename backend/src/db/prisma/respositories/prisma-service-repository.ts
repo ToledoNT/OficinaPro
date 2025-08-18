@@ -23,24 +23,40 @@ export class PrismaServiceRepository {
   }
 
   async update(id: string, updateData: IUpdateService): Promise<ResponseTemplateInterface> {
-    const { id: _, ...updateFields } = updateData;  
+    const { id: _, ...data } = updateData;
   
-    try {
-      console.log('Campos para atualização:', updateFields);
+    const allowedFields: (keyof Omit<IUpdateService, "id">)[] = [
+      "clienteId",
+      "veiculo",
+      "dataCadastro",
+      "descricao",
+      "finalizado",
+      "status",
+      "observacoes",
+      "prioridade",
+      "valor",
+      "pago",
+    ];
   
-      const response = await prisma.service.update({
-        where: {
-          id,  
-        },
-        data: updateFields,  
-      });
-  
-      return new ResponseTemplateModel(true, 200, "Serviço atualizado com sucesso", response);
-    } catch (error) {
-      console.error("Erro ao atualizar serviço:", error);
-      return new ResponseTemplateModel(false, 500, "Erro ao atualizar serviço", []);
+    // Cria objeto somente com campos definidos
+    const updateFields: Record<string, any> = {};
+    for (const key of allowedFields) {
+      if (data[key] !== undefined) {
+        updateFields[key] = data[key]; // TypeScript não reclama mais
+      }
     }
+  
+    // Atualiza no banco
+    const response = await prisma.service.update({
+      where: { id },
+      data: updateFields,
+    });
+  
+    return new ResponseTemplateModel(true, 200, "Serviço atualizado com sucesso", response);
   }
+  
+  
+
   
   async delete(id: string): Promise<ResponseTemplateInterface> {
     try {

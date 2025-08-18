@@ -10,17 +10,18 @@ datasource db {
 model Cliente {
   id           String    @id @default(auto()) @map("_id") @db.ObjectId
   nome         String
-  telefone     String
-  isWhatsapp   Boolean
-  cpf          String
+  telefone     String?       // Agora é opcional
+  isWhatsapp   Boolean?      // Opcional
+  cpf          String?       // Opcional
   email        String?
-  endereco     Endereco
-  observacoes  String
-  dataCadastro DateTime  @default(now())
+  endereco     Endereco?     // Opcional
+  observacoes  String?       // Opcional
+  dataCadastro DateTime      @default(now())
   veiculos     Veiculo[]
   services     Service[] @relation("ClienteToService")
   contas       Conta[]   @relation("ClienteToConta")
 }
+
 
 type Endereco {
   rua     String

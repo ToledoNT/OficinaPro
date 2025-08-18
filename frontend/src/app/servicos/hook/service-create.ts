@@ -105,6 +105,7 @@ export const useServicos = () => {
     try {
       const api = new ApiService();
       const response = await api.updateService({ id, status });
+      console.log(response + "Chegou")  
 
       if (response.status) {
         setServicos((prev) =>
