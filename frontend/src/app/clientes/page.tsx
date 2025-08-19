@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Cliente, Endereco, Veiculo } from "../interfaces/clientes-interface";
 import { ClienteForm } from "./components/cliente-form";
 import { ClienteList } from "./components/cliente-list";
@@ -7,8 +9,12 @@ import { ClienteModal } from "./components/cliente-modal";
 import { Button } from "./components/ui/button";
 import { useClientes } from "./hook/cliente-hook";
 import { criarClienteVazio } from "./utils/cliente-utills";
-
 export default function ClientesPage() {
+  const router = useRouter();
+
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   const {
     viewMode,
     setViewMode,
@@ -21,8 +27,28 @@ export default function ClientesPage() {
     salvarCliente,
     deletarCliente,
     clientesFiltrados,
-    router,
+    router: clienteRouter,
   } = useClientes();
+
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (!user) {
+      router.replace("/"); 
+    } else {
+      setIsAuthenticated(true);
+    }
+    setLoadingAuth(false);
+  }, [router]);
+
+  if (loadingAuth) {
+    return (
+      <div className="h-screen flex items-center justify-center text-white">
+        Verificando sessão...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return null;
 
   const handleChange = <K extends keyof Cliente>(field: K, value: Cliente[K]) => {
     setClienteAtual(prev => ({ ...prev, [field]: value }));
@@ -53,8 +79,7 @@ export default function ClientesPage() {
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
       <div className="max-w-6xl mx-auto">
-        
-        {/* Botão Voltar (em modo de cadastro/edição) */}
+        {/* Botão Voltar */}
         {viewMode !== "ver" && (
           <div className="mb-6">
             <Button
@@ -67,12 +92,11 @@ export default function ClientesPage() {
               }}
             >
               ← Voltar
-            
             </Button>
           </div>
         )}
 
-        {/* Lista de clientes */}
+        {/* Lista */}
         {viewMode === "ver" && (
           <ClienteList
             clientes={clientesFiltrados}
@@ -88,11 +112,11 @@ export default function ClientesPage() {
               setViewMode("editar");
             }}
             onDeleteCliente={deletarCliente}
-            onBackToHome={() => router.push("/")}
+            onBackToHome={() => clienteRouter.push("/")}
           />
         )}
 
-        {/* Formulário de cliente */}
+        {/* Formulário */}
         {(viewMode === "cadastrar" || viewMode === "editar") && (
           <ClienteForm
             cliente={clienteAtual}
@@ -109,7 +133,7 @@ export default function ClientesPage() {
           />
         )}
 
-        {/* Modal de visualização */}
+        {/* Modal */}
         {clienteVisualizar && (
           <ClienteModal
             cliente={clienteVisualizar}

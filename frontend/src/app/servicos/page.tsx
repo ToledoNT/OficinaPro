@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../clientes/components/ui/button";
 import { Servico } from "../interfaces/service-interface";
 import { Input } from "../clientes/components/ui/input";
@@ -32,6 +32,23 @@ export default function ServicosPage() {
 
   const [mostrarServicos, setMostrarServicos] = useState(false);
   const [servicoVisualizar, setServicoVisualizar] = useState<Servico | null>(null);
+  const [loadingSession, setLoadingSession] = useState(true);
+
+  // Verifica se o usuário está logado
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      router.replace('/');
+    } else {
+      try {
+        JSON.parse(storedUser);
+        setLoadingSession(false);
+      } catch {
+        localStorage.removeItem('user');
+        router.replace('/');
+      }
+    }
+  }, [router]);
 
   const handleSave = async (servico: Servico) => {
     const success = await salvarServico(servico);
@@ -40,6 +57,14 @@ export default function ServicosPage() {
       setViewMode("ver");
     }
   };
+
+  if (loadingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        Carregando...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">

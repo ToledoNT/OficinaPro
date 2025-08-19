@@ -17,8 +17,13 @@ export default function Relatorios() {
   const [loading, setLoading] = useState(true);
 
   const api = new ApiService();
-
   useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      router.replace('/');
+      return;
+    }
+
     const fetchRelatorios = async () => {
       setLoading(true);
       try {
@@ -54,7 +59,7 @@ export default function Relatorios() {
     };
 
     fetchRelatorios();
-  }, []);
+  }, [router]);
 
   const relatoriosFiltrados = useMemo(() => {
     return relatoriosData.filter(item => {
@@ -80,8 +85,8 @@ export default function Relatorios() {
             onClick={() => router.push('/')}
             className="border border-gray-500 text-gray-200 hover:bg-gray-700"
           >
-              ← Voltar para tela inicial
-              </Button>
+            ← Voltar para tela inicial
+          </Button>
         </div>
 
         {/* Título com separador */}

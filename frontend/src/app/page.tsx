@@ -19,14 +19,12 @@ export default function LoginPage() {
 
   const apiService = new ApiService();
 
-  // Check auth status and redirect if already logged in
   useEffect(() => {
     const checkAuth = async () => {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         try {
           const user = JSON.parse(storedUser);
-          // You might want to add token validation here
           router.replace('/home');
         } catch (err) {
           localStorage.removeItem('user');
@@ -48,7 +46,6 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    // Validation
     if (!formData.username.trim()) {
       return setError('Informe seu usuário.');
     }
@@ -64,19 +61,14 @@ export default function LoginPage() {
         throw new Error('No response from server');
       }
 
-      console.log('API Response:', response); // Debug log
-
       if (response.user) {
-        // Store user data
         const userData = {
           id: response.user.id,
           username: response.user.user,
-          // Add any other relevant user data
         };
 
         localStorage.setItem('user', JSON.stringify(userData));
         
-        // Redirect to home page
         router.push('/home');
       } else {
         setError(response.message || 'Authentication failed. Please try again.');

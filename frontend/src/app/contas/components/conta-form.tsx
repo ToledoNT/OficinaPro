@@ -25,7 +25,7 @@ export function ContaForm({
   onCancelar,
   onSalvar,
   readonly = false,
-  loading = false, // adicionada a prop loading
+  loading = false, 
 }: ContaFormProps & { loading?: boolean }) {
   const { clientes, fetchClientes } = useClientes();
   const { servicos, fetchServicos } = useServicosPorCliente();
