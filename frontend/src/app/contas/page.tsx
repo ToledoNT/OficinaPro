@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '../clientes/components/ui/input';
 import { Button } from '../clientes/components/ui/button';
@@ -13,6 +13,23 @@ type ViewMode = 'lista' | 'formulario' | 'visualizar';
 
 export default function Contas() {
   const router = useRouter();
+
+  const [loadingSession, setLoadingSession] = useState(true);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      router.replace('/');
+    } else {
+      try {
+        JSON.parse(storedUser);
+        setLoadingSession(false);
+      } catch {
+        localStorage.removeItem('user');
+        router.replace('/');
+      }
+    }
+  }, [router]);
 
   const [viewMode, setViewMode] = useState<ViewMode>('lista');
   const [contaAtual, setContaAtual] = useState<Conta>({
@@ -98,7 +115,6 @@ export default function Contas() {
     return textoMatch && statusMatch;
   });
 
-  // ---------- Cálculo de valores ----------
   const parseValor = (valor: string | number | undefined) => {
     if (!valor) return 0;
     const numero = typeof valor === 'number' ? valor : Number(valor.toString().replace(',', '.'));
@@ -128,6 +144,15 @@ export default function Contas() {
       alert('Erro ao salvar/atualizar conta: ' + (resultado.message ?? ''));
     }
   };
+
+  if (loadingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        Carregando...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-4 py-10">
       <div className="max-w-6xl mx-auto">
