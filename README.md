@@ -45,7 +45,7 @@ O sistema está atualmente em **fase de desenvolvimento ativo**, com novas funci
 - Busca avançada  
 
 ### 🔧 Módulo de Serviços
-![Serviços](./images/4-servico1.png)
+![Serviços](./images/4-servico1.png)  
 - Cadastro de serviços realizados  
 - Controle de status  
 - Associação com clientes e veículos  
