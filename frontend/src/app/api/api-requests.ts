@@ -9,7 +9,7 @@ import { IRegisterServiceData, IUpdateServiceData, Servico } from "@/app/interfa
 import { IRegisterContaData, Conta, ApiResponseDeleteConta } from "@/app/interfaces/contas-interface";
 import { IFetchUser } from "../interfaces/user-interface";
 
-const apiBaseURL = "http://localhost:4001/api";
+const apiBaseURL = process.env.NEXT_PUBLIC_API_URL || "http://192.168.18.129:4001/api";
 
 export class ApiService {
   private api: AxiosInstance;
@@ -20,7 +20,7 @@ export class ApiService {
       headers: { "Content-Type": "application/json" },
     });
   }
-  
+
   // ---------------- LOGIN ----------------
   async loginUser(
     user: string,
@@ -31,7 +31,7 @@ export class ApiService {
         "/user/login",
         { user, password } 
       );
-  
+
       if (response.data.status) {
         return {
           status: true,
@@ -51,14 +51,14 @@ export class ApiService {
           message: error.response?.data?.message || `Erro ao efetuar login: ${error.message}`,
         };
       }
-  
+
       return {
         status: false,
         message: "Erro desconhecido ao efetuar login",
       };
     }
   }
-  
+
   // ---------------- CLIENTES ----------------
   async getClientes(): Promise<Cliente[]> {
     try {
@@ -237,7 +237,7 @@ export class ApiService {
   async deleteConta(id: number): Promise<ApiResponseDeleteConta> {
     try {
       const response = await this.api.delete<ApiResponseDeleteConta>(`/conta/deleteconta/${id}`);
-      return response.data; // agora response.data tem o tipo correto
+      return response.data;
     } catch (error) {
       return {
         mensagem: "Erro ao deletar conta",
