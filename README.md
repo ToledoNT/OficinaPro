@@ -1,7 +1,7 @@
 # 📋 OficinaPro - Sistema de Gerenciamento para Oficinas (Full-Stack)
 
-[![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)](https://github.com/seuusuario/OficinaPro)  
-[![Tecnologias](https://img.shields.io/badge/tecnologias-Next.js%20|%20Node.js%20|%20React-blue)](https://github.com/seuusuario/OficinaPro)
+[![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)](https://github.com/ToledoNT/OficinaPro)  
+[![Tecnologias](https://img.shields.io/badge/tecnologias-Next.js%20|%20Node.js%20|%20React-blue)](https://github.com/ToledoNT/OficinaPro)
 
 ## 🚀 Visão Geral
 
@@ -31,35 +31,32 @@ O sistema está atualmente em **fase de desenvolvimento ativo**, com novas funci
 ---
 
 ## ✨ Funcionalidades
-(./images/2-home.png)
 
-
-### 🔑 Sistema de Autenticação 
-(./images/1-login.png)
+### 🔑 Sistema de Autenticação
+![Login](./images/1-login.png)  
 - Controle de sessão seguro  
 - Middleware de autenticação  
 
 ### 🧑‍🔧 Módulo de Clientes
-  (./images/3-cliente.png)
+![Clientes](./images/3-cliente.png)  
 - CRUD completo de clientes  
 - Histórico de veículos e serviços  
 - Busca avançada  
 
 ### 🔧 Módulo de Serviços
-  (./images/4-serviço.png)
+![Serviços](./images/4-serviço.png)  
 - Cadastro de serviços realizados  
 - Controle de status  
 - Associação com clientes e veículos  
 
 ### 💰 Módulo Contas
-  (./images/5-conta.png)
+![Contas](./images/5-conta.png)  
 - Controle de contas a pagar e receber  
 - Fluxo de caixa detalhado  
 - Integração com serviços financeiros  
 
 ### 📊 Módulo de Relatórios
-  (./images/6-relatorio.png)
-
+![Relatórios](./images/6-relatorio.png)  
 - Relatórios financeiros detalhados  
 - Visualização por período, cliente ou serviço  
 
