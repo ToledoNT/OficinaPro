@@ -1,49 +1,90 @@
 # 📋 OficinaPro - Sistema de Gerenciamento para Oficinas (Full-Stack)
 
+[![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)](https://github.com/seuusuario/OficinaPro)  
+[![Tecnologias](https://img.shields.io/badge/tecnologias-Next.js%20|%20Node.js%20|%20React-blue)](https://github.com/seuusuario/OficinaPro)
+
 ## 🚀 Visão Geral
 
-O **OficinaPro** é um sistema completo para gerenciamento de oficinas mecânicas, combinando um backend robusto e um frontend moderno. O sistema está atualmente em **fase de desenvolvimento ativo**.
+O **OficinaPro** é um sistema completo para gerenciamento de oficinas mecânicas, unindo um **backend robusto** e um **frontend moderno**.  
+Permite gerenciar clientes, veículos, serviços, contas e gerar relatórios financeiros de maneira prática e eficiente.
+
+O sistema está atualmente em **fase de desenvolvimento ativo**, com novas funcionalidades sendo adicionadas constantemente.
+
+---
 
 ## 🏗️ Arquitetura do Sistema
 
 ### Frontend
-- Next.js (App Router)
-- React
-- Tailwind CSS
-- Framer Motion (animações)
-- Typescript
+- **Next.js** (App Router)  
+- **React**  
+- **Tailwind CSS**  
+- **Framer Motion** (animações)  
+- **TypeScript**
 
 ### Backend
-- Node.js
-- Express
-- Typescript
-- Prisma (ORM)
-- MongoDB (banco de dados)
-
-## ✨ Funcionalidades
-
-### 🔑 Sistema de Autenticação
-- Controle de sessão
-- Middleware de autenticação
-
-### 🧑‍🔧 Módulo de Clientes
-- CRUD completo de clientes
-- Histórico de veículos e serviços
-- Busca avançada
-
-### 🔧 Módulo de Serviços
-- Cadastro de serviços realizados
-- Controle de status
-- Associação com clientes e veículos
-
-### 💰 Módulo Contas
-- Controle de contas a pagar/receber
-- Fluxo de caixa
-- Integração com serviços
-
-### 📊 Módulo de Relatórios
-- Relatórios financeiros
+- **Node.js**  
+- **Express**  
+- **TypeScript**  
+- **Prisma** (ORM)  
+- **MongoDB** (banco de dados)
 
 ---
 
-> ⚠️ O sistema ainda está em **desenvolvimento ativo**, e novas funcionalidades estão sendo adicionadas constantemente.
+## ✨ Funcionalidades
+(./images/2-home.png)
+
+
+### 🔑 Sistema de Autenticação 
+(./images/1-login.png)
+- Controle de sessão seguro  
+- Middleware de autenticação  
+
+### 🧑‍🔧 Módulo de Clientes
+  (./images/3-cliente.png)
+- CRUD completo de clientes  
+- Histórico de veículos e serviços  
+- Busca avançada  
+
+### 🔧 Módulo de Serviços
+  (./images/4-serviço.png)
+- Cadastro de serviços realizados  
+- Controle de status  
+- Associação com clientes e veículos  
+
+### 💰 Módulo Contas
+  (./images/5-conta.png)
+- Controle de contas a pagar e receber  
+- Fluxo de caixa detalhado  
+- Integração com serviços financeiros  
+
+### 📊 Módulo de Relatórios
+  (./images/6-relatorio.png)
+
+- Relatórios financeiros detalhados  
+- Visualização por período, cliente ou serviço  
+
+---
+
+## ⚙️ Instalação
+
+1. Clone o repositório:
+```bash
+git clone https://github.com/ToledoNT/OficinaPro.git
+
+2. Instale as dependências do backend:
+cd backend
+npm install
+
+3. Instale as dependências do frontend:
+cd ../frontend
+npm install
+
+4. Configure variáveis de ambiente (.env) para backend e frontend.
+
+5. Execute o projeto:
+
+# Backend
+npm run dev
+
+# Frontend
+npm run dev
