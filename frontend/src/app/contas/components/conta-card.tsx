@@ -40,7 +40,7 @@ export function ContaCard({
           <div className="mb-3">
             <p className="font-semibold text-white mb-1">Serviço vinculado:</p>
             <p className="text-sm text-gray-400">
-              {conta.servicoVinculado || `ID: ${conta.servicoId}`}
+              {conta.servicoVinculado || `ID: ${conta.descricao}`}
             </p>
           </div>
         )}

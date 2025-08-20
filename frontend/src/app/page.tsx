@@ -8,10 +8,7 @@ import { ApiService } from './api/api-requests';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    username: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState({ username: '', password: '' });
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,9 +21,9 @@ export default function LoginPage() {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         try {
-          const user = JSON.parse(storedUser);
+          JSON.parse(storedUser);
           router.replace('/home');
-        } catch (err) {
+        } catch {
           localStorage.removeItem('user');
         }
       }
@@ -36,164 +33,167 @@ export default function LoginPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!formData.username.trim()) {
-      return setError('Informe seu usuário.');
-    }
-    if (formData.password.length < 6) {
-      return setError('A senha deve ter pelo menos 6 caracteres.');
-    }
+    if (!formData.username.trim()) return setError('Informe seu usuário.');
+    if (formData.password.length < 6) return setError('A senha deve ter pelo menos 6 caracteres.');
 
     try {
       setLoading(true);
       const response = await apiService.loginUser(formData.username, formData.password);
-      
-      if (!response) {
-        throw new Error('No response from server');
-      }
 
-      if (response.user) {
-        const userData = {
-          id: response.user.id,
-          username: response.user.user,
-        };
-
-        localStorage.setItem('user', JSON.stringify(userData));
-        
+      if (response?.user) {
+        localStorage.setItem('user', JSON.stringify({ id: response.user.id, username: response.user.user }));
         router.push('/home');
       } else {
-        setError(response.message || 'Authentication failed. Please try again.');
+        setError(response?.message || 'Falha na autenticação. Tente novamente.');
       }
     } catch (err) {
       console.error('Login error:', err);
-      if (err instanceof Error) {
-        setError(err.message || 'Erro ao efetuar login. Tente novamente.');
-      } else {
-        setError('An unexpected error occurred');
-      }
+      setError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen w-full bg-[#0b0f14] text-gray-200 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-md">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="absolute -inset-1 rounded-3xl bg-gradient-to-b from-blue-500/20 to-transparent blur-2xl"
-          aria-hidden
-        />
+    <main className="flex flex-col min-h-screen bg-[#0b0f14] text-gray-200 p-4">
+      <div className="flex-grow flex items-center justify-center w-full">
+        <div className="relative w-full max-w-md">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="absolute -inset-1 rounded-3xl bg-gradient-to-b from-blue-500/20 to-transparent blur-2xl"
+            aria-hidden
+          />
 
-        <motion.section
-          initial={{ y: 12, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="relative rounded-3xl border p-6 sm:p-8 backdrop-blur bg-[#0f1720]/95 border-gray-800/15 shadow-2xl"
-        >
-          <header className="mb-6">
-            <h1 className="text-2xl font-semibold tracking-tight">Bem-vindo de volta</h1>
-            <p className="mt-1 text-sm text-gray-400">
-              Entre para continuar gerenciando seus serviços.
-            </p>
-          </header>
+          <motion.section
+            initial={{ y: 12, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="relative rounded-3xl border p-6 sm:p-8 backdrop-blur bg-[#0f1720]/95 border-gray-800/15 shadow-2xl"
+          >
+            <header className="mb-6">
+              <h1 className="text-2xl font-semibold tracking-tight">Bem-vindo de volta</h1>
+              <p className="mt-1 text-sm text-gray-400">Entre para continuar gerenciando seus serviços.</p>
+            </header>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-4">
-              <label className="block text-sm">
-                <span className="mb-1 inline-flex items-center gap-2 text-gray-300">
-                  <User className="h-4 w-4 opacity-80" /> Usuário
-                </span>
-                <input
-                  type="text"
-                  name="username"
-                  autoComplete="username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  placeholder="Seu Usuário"
-                  className="mt-1 w-full rounded-xl border bg-transparent px-3 py-2.5 text-sm outline-none transition placeholder:text-gray-500 border-gray-800/15 focus:ring-2 focus:ring-blue-500/40"
-                />
-              </label>
-
-              <label className="block text-sm">
-                <span className="mb-1 inline-flex items-center gap-2 text-gray-300">
-                  <Lock className="h-4 w-4 opacity-80" /> Senha
-                </span>
-                <div className="relative">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-4">
+                <label className="block text-sm">
+                  <span className="mb-1 inline-flex items-center gap-2 text-gray-300">
+                    <User className="h-4 w-4 opacity-80" /> Usuário
+                  </span>
                   <input
-                    type={showPwd ? 'text' : 'password'}
-                    name="password"
-                    autoComplete="current-password"
-                    value={formData.password}
+                    type="text"
+                    name="username"
+                    autoComplete="username"
+                    value={formData.username}
                     onChange={handleInputChange}
-                    placeholder="••••••••"
-                    className="mt-1 w-full rounded-xl border bg-transparent px-3 py-2.5 pr-10 text-sm outline-none transition placeholder:text-gray-500 border-gray-800/15 focus:ring-2 focus:ring-blue-500/40"
+                    placeholder="Seu Usuário"
+                    className="mt-1 w-full rounded-xl border bg-transparent px-3 py-2.5 text-sm outline-none transition placeholder:text-gray-500 border-gray-800/15 focus:ring-2 focus:ring-blue-500/40"
                   />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-2 my-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                    aria-label={showPwd ? 'Esconder senha' : 'Mostrar senha'}
-                    onClick={() => setShowPwd(!showPwd)}
-                  >
-                    {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </label>
-            </div>
+                </label>
 
-            <div className="flex items-center justify-between">
-              <label className="inline-flex items-center gap-2 text-xs text-gray-400 select-none">
-                <input 
-                  type="checkbox" 
-                  checked={rememberMe}
-                  onChange={() => setRememberMe(!rememberMe)}
-                  className="h-4 w-4 rounded border-gray-800/15 bg-transparent" 
-                />
-                Lembrar-me
-              </label>
-            </div>
-
-            {error && (
-              <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-                {error}
+                <label className="block text-sm">
+                  <span className="mb-1 inline-flex items-center gap-2 text-gray-300">
+                    <Lock className="h-4 w-4 opacity-80" /> Senha
+                  </span>
+                  <div className="relative">
+                    <input
+                      type={showPwd ? 'text' : 'password'}
+                      name="password"
+                      autoComplete="current-password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="••••••••"
+                      className="mt-1 w-full rounded-xl border bg-transparent px-3 py-2.5 pr-10 text-sm outline-none transition placeholder:text-gray-500 border-gray-800/15 focus:ring-2 focus:ring-blue-500/40"
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-2 my-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                      aria-label={showPwd ? 'Esconder senha' : 'Mostrar senha'}
+                      onClick={() => setShowPwd(!showPwd)}
+                    >
+                      {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </label>
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="group inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 bg-blue-500 hover:bg-blue-600 text-white focus:ring-blue-500/30 disabled:opacity-60"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Entrando...
-                </>
-              ) : (
-                <>
-                  <LogIn className="h-4 w-4" />
-                  Entrar
-                </>
+              <div className="flex items-center justify-between">
+                <label className="inline-flex items-center gap-2 text-xs text-gray-400 select-none">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={() => setRememberMe(!rememberMe)}
+                    className="h-4 w-4 rounded border-gray-800/15 bg-transparent"
+                  />
+                  Lembrar-me
+                </label>
+              </div>
+
+              {error && (
+                <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+                  {error}
+                </div>
               )}
-            </button>
-          </form>
-        </motion.section>
 
-        <footer className="mt-6 text-center text-[10px] text-gray-500">
-          © {new Date().getFullYear()} OficinaPro · Todos os direitos reservados
-        </footer>
+              <button
+                type="submit"
+                disabled={loading}
+                className="group inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 bg-blue-500 hover:bg-blue-600 text-white focus:ring-blue-500/30 disabled:opacity-60"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Entrando...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="h-4 w-4" />
+                    Entrar
+                  </>
+                )}
+              </button>
+            </form>
+          </motion.section>
+        </div>
       </div>
+
+{/* Footer estilizado */}
+<footer className="mt-12 border-t border-gray-700 pt-6 pb-4 text-center text-gray-400 text-sm">
+  <p className="mb-2">© {new Date().getFullYear()} OficinaPro · Desenvolvido por Francis Toledo</p>
+  <div className="flex flex-wrap justify-center items-center gap-6">
+    {/* LinkedIn */}
+    <a
+      href="https://www.linkedin.com/in/francis-toledo-461033260/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="hover:text-white transition-colors flex items-center gap-1"
+    >
+      LinkedIn
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-4 w-4 opacity-80"
+        fill="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path d="M19 0h-14c-2.76 0-5 2.24-5 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5v-14c0-2.76-2.24-5-5-5zm-11.75 19h-2.5v-10h2.5v10zm-1.25-11.25c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13 11.25h-2.5v-5.5c0-1.32-.03-3-1.83-3-1.83 0-2.11 1.43-2.11 2.91v5.59h-2.5v-10h2.4v1.37h.03c.33-.63 1.14-1.29 2.35-1.29 2.51 0 2.97 1.65 2.97 3.8v6.12z"/>
+      </svg>
+    </a>
+
+    
+  </div>
+</footer>
+
+
     </main>
   );
 }

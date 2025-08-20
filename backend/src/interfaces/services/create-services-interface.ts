@@ -9,4 +9,5 @@ export interface ICreateService {
     prioridade?: string;
     valor?: string;
     pago?: boolean;
+    contaId?: string; 
   }
