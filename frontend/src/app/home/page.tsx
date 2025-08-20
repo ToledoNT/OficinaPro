@@ -92,9 +92,28 @@ export default function Home() {
       </motion.main>
 
       {/* Rodapé */}
-      <footer className="mt-16 text-xs text-gray-400">
-        © {new Date().getFullYear()} OficinaPro · Desenvolvido por Francis
-      </footer>
+      <footer className="mt-12 border-t border-gray-700 pt-6 pb-4 text-center text-gray-400 text-sm">
+      <p className="mb-2">© {new Date().getFullYear()} OficinaPro · Desenvolvido por Francis Toledo</p>
+      <div className="flex flex-wrap justify-center items-center gap-6">
+    {/* LinkedIn */}
+    <a
+      href="https://www.linkedin.com/in/francis-toledo-461033260/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="hover:text-white transition-colors flex items-center gap-1"
+    >
+      LinkedIn
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-4 w-4 opacity-80"
+        fill="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path d="M19 0h-14c-2.76 0-5 2.24-5 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5v-14c0-2.76-2.24-5-5-5zm-11.75 19h-2.5v-10h2.5v10zm-1.25-11.25c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13 11.25h-2.5v-5.5c0-1.32-.03-3-1.83-3-1.83 0-2.11 1.43-2.11 2.91v5.59h-2.5v-10h2.4v1.37h.03c.33-.63 1.14-1.29 2.35-1.29 2.51 0 2.97 1.65 2.97 3.8v6.12z"/>
+      </svg>
+    </a>
+  </div>
+</footer>
     </div>
   );
 }

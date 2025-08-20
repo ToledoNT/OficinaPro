@@ -41,6 +41,12 @@ export const ServicoForm = ({ servico, clientes, onSave, onCancel, loading = fal
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // ALERTAS
+    if (!formData.clienteId) { alert('Selecione um cliente válido.'); return; }
+    if (!formData.veiculo) { alert('Selecione um veículo válido.'); return; }
+    if (!formData.descricao || !formData.descricao.trim()) { alert('O campo Descrição é obrigatório.'); return; }
+
     if (!loading) onSave(formData);
   };
 
@@ -58,7 +64,7 @@ export const ServicoForm = ({ servico, clientes, onSave, onCancel, loading = fal
   }, [clienteBusca, clientes]);
 
   return (
-    <Card className="bg-[#1e293b] p-6 border border-gray-700 max-w-3xl mx-auto">
+    <Card className="bg-[#1e293b] p-6 border border-gray-700 max-w-3xl mx-auto mt-6">
       <CardContent className="space-y-6">
         <h2 className="text-2xl font-semibold">Cadastro / Edição de Serviço</h2>
 
@@ -91,7 +97,7 @@ export const ServicoForm = ({ servico, clientes, onSave, onCancel, loading = fal
 
         {/* Veículo */}
         <div>
-          <Label htmlFor="veiculo">Veículo</Label>
+          <Label htmlFor="veiculo">Veículo *</Label>
           <select
             id="veiculo"
             value={formData.veiculo || ""}
@@ -101,9 +107,7 @@ export const ServicoForm = ({ servico, clientes, onSave, onCancel, loading = fal
           >
             <option value="">Selecione o veículo</option>
             {veiculosCliente.map((v) => (
-              <option key={v.placa} value={v.placa}>
-                {v.modelo} - {v.placa}
-              </option>
+              <option key={v.placa} value={v.placa}>{v.modelo} - {v.placa}</option>
             ))}
           </select>
         </div>
@@ -132,9 +136,7 @@ export const ServicoForm = ({ servico, clientes, onSave, onCancel, loading = fal
               required
               className={inputClass}
             >
-              {PRIORITY_OPTIONS.map(p => (
-                <option key={p} value={p}>{p}</option>
-              ))}
+              {PRIORITY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
 
@@ -147,25 +149,9 @@ export const ServicoForm = ({ servico, clientes, onSave, onCancel, loading = fal
               required
               className={inputClass}
             >
-              {STATUS_OPTIONS.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
+              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
-        </div>
-
-        {/* Valor */}
-        <div>
-          <Label htmlFor="valor">Valor</Label>
-          <Input
-            id="valor"
-            type="number"
-            step="0.01"
-            value={formData.valor || ""}
-            onChange={(e) => handleChange("valor", e.target.value)}
-            placeholder="Informe o valor"
-            className={inputClass}
-          />
         </div>
 
         {/* Observações */}
@@ -180,32 +166,16 @@ export const ServicoForm = ({ servico, clientes, onSave, onCancel, loading = fal
           />
         </div>
 
-        {/* Pago */}
-        <div className="flex items-center space-x-2">
-          <input
-            id="pago"
-            type="checkbox"
-            checked={formData.pago}
-            onChange={(e) => handleChange("pago", e.target.checked)}
-            className="w-4 h-4"
-          />
-          <Label htmlFor="pago" className="mb-0">Pago</Label>
-        </div>
-
         {/* Botões */}
         <div className="flex justify-end space-x-4 pt-4 border-t border-gray-700">
-          <Button variant="outline" onClick={onCancel} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button type="submit" onClick={handleSubmit} disabled={loading} className="relative">
+          <Button variant="outline" onClick={onCancel} disabled={loading}>Cancelar</Button>
+          <Button onClick={handleSubmit} disabled={loading} className="relative">
             {loading ? (
               <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
                 Salvando...
               </div>
-            ) : (
-              "Salvar"
-            )}
+            ) : "Salvar"}
           </Button>
         </div>
       </CardContent>
