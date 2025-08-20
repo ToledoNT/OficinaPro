@@ -28,27 +28,28 @@ export class CreateClientModel {
     this.email = data.email?.trim() || undefined;
 
     if (data.endereco) {
-      const enderecoFiltrado: Record<string, string> = {};
-      Object.entries(data.endereco).forEach(([key, value]) => {
-        if (value?.trim()) enderecoFiltrado[key] = value;
-      });
-      if (Object.keys(enderecoFiltrado).length > 0) this.endereco = enderecoFiltrado as any;
+      this.endereco = {
+        rua: data.endereco.rua?.trim() || "",
+        numero: data.endereco.numero?.trim() || "0",
+        bairro: data.endereco.bairro?.trim() || "",
+        cidade: data.endereco.cidade?.trim() || "",
+        estado: data.endereco.estado?.trim() || "",
+        cep: data.endereco.cep?.trim() || ""
+      };
     }
 
-    this.observacoes = data.observacoes?.trim() || undefined;
+    this.observacoes = data.observacoes?.trim() || "";
     this.dataCadastro = data.dataCadastro ?? new Date();
 
     if (Array.isArray(data.veiculos)) {
       const veiculosFiltrados = data.veiculos
-        .map(v => {
-          const obj: Partial<Veiculo> = {};
-          if (v.placa?.trim()) obj.placa = v.placa;
-          if (v.modelo?.trim()) obj.modelo = v.modelo;
-          if (v.ano?.trim()) obj.ano = v.ano;
-          if (v.cor?.trim()) obj.cor = v.cor;
-          if (v.chassi?.trim()) obj.chassi = v.chassi;
-          return obj;
-        })
+        .map(v => ({
+          placa: v.placa?.trim() || "",
+          modelo: v.modelo?.trim() || "",
+          ano: v.ano?.trim() || "",
+          cor: v.cor?.trim() || "",
+          chassi: v.chassi?.trim() || ""
+        }))
         .filter(v => Object.keys(v).length > 0);
 
       if (veiculosFiltrados.length > 0) this.veiculos = veiculosFiltrados as Veiculo[];
@@ -58,15 +59,23 @@ export class CreateClientModel {
   toPayload() {
     const payload: Record<string, any> = {};
 
-    if (this.nome) payload.nome = this.nome;
-    if (this.telefone) payload.telefone = this.telefone;
-    if (this.isWhatsapp !== undefined) payload.isWhatsapp = this.isWhatsapp;
-    if (this.cpf) payload.cpf = this.cpf;
+    payload.nome = this.nome || "";
+    payload.telefone = this.telefone || "";
+    payload.isWhatsapp = this.isWhatsapp ?? false;
+    payload.cpf = this.cpf || "";
     if (this.email) payload.email = this.email;
-    if (this.endereco) payload.endereco = this.endereco;
-    if (this.observacoes) payload.observacoes = this.observacoes;
-    if (this.dataCadastro) payload.dataCadastro = this.dataCadastro;
-    if (this.veiculos && this.veiculos.length > 0) payload.veiculos = this.veiculos;
+
+    // endereços e veículos como objetos diretos
+    if (this.endereco) {
+      payload.endereco = { ...this.endereco };
+    }
+
+    payload.observacoes = this.observacoes;
+    payload.dataCadastro = this.dataCadastro;
+
+    if (this.veiculos && this.veiculos.length > 0) {
+      payload.veiculos = [...this.veiculos];
+    }
 
     return payload;
   }
