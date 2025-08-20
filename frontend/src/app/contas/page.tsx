@@ -233,7 +233,7 @@ export default function Contas() {
                       setContaAtual(contaSelecionada);
                       setViewMode('formulario');
                     }}
-                    onExcluir={async () => {
+                    onDelete={async () => {
                       if (!c.id) return;
                       const confirm = window.confirm('Tem certeza que deseja excluir esta conta?');
                       if (!confirm) return;
