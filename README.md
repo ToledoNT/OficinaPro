@@ -31,32 +31,33 @@ O sistema está atualmente em **fase de desenvolvimento ativo**, com novas funci
 ---
 
 ## ✨ Funcionalidades
+![Home](./images/2-Home.png)  
 
 ### 🔑 Sistema de Autenticação
-![Login](./images/1-login.png)  
+![Login](./images/1-Login.png)  
 - Controle de sessão seguro  
 - Middleware de autenticação  
 
 ### 🧑‍🔧 Módulo de Clientes
-![Clientes](./images/3-cliente.png)  
+![Clientes](./images/3-Cliente.png)  
 - CRUD completo de clientes  
 - Histórico de veículos e serviços  
 - Busca avançada  
 
 ### 🔧 Módulo de Serviços
-![Serviços](./images/4-serviço.png)  
+![Serviços](./images/4-Serviço.png)  
 - Cadastro de serviços realizados  
 - Controle de status  
 - Associação com clientes e veículos  
 
 ### 💰 Módulo Contas
-![Contas](./images/5-conta.png)  
+![Contas](./images/5-Conta.png)  
 - Controle de contas a pagar e receber  
 - Fluxo de caixa detalhado  
 - Integração com serviços financeiros  
 
 ### 📊 Módulo de Relatórios
-![Relatórios](./images/6-relatorio.png)  
+![Relatórios](./images/6-Relatorio.png)  
 - Relatórios financeiros detalhados  
 - Visualização por período, cliente ou serviço  
 
