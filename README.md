@@ -39,13 +39,13 @@ O sistema está atualmente em **fase de desenvolvimento ativo**, com novas funci
 - Middleware de autenticação  
 
 ### 🧑‍🔧 Módulo de Clientes
-![Clientes](./images/3-Cliente.png)  
+![Clientes](./images/3-Cliente1.png)  
 - CRUD completo de clientes  
 - Histórico de veículos e serviços  
 - Busca avançada  
 
 ### 🔧 Módulo de Serviços
-![Serviços](./images/4-Serviço.png)  
+![Serviços](./images/4-servico1.png)  
 - Cadastro de serviços realizados  
 - Controle de status  
 - Associação com clientes e veículos  
