@@ -58,7 +58,7 @@ export interface ContaCardProps {
   formatarValor: (valor: string) => string;
   onVer: () => void;
   onEditar: (conta: Conta) => void; 
-  onExcluir: (id: number) => void;  
+  onDelete: (id: number) => void;  
   loading?: boolean;
 }
 

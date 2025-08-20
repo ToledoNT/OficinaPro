@@ -124,13 +124,13 @@ export const useServicos = () => {
     setLoading(true);
     try {
       const api = new ApiService();
-      const response = await api.deleteService(id);
-
-      if (response.status) {
+      const success = await api.deleteService(id);
+  
+      if (success) {
         setServicos((prev) => prev.filter((s) => s.id !== id));
         return true;
       }
-
+  
       return false;
     } catch (error) {
       console.error("Erro ao deletar serviço:", error);
@@ -139,7 +139,8 @@ export const useServicos = () => {
       setLoading(false);
     }
   };
-
+  
+  
   return {
     viewMode,
     setViewMode,

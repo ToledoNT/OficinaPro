@@ -9,7 +9,7 @@ export function ContaCard({
   formatarValor,
   onVer,
   onEditar,
-  onExcluir,
+  onDelete,
   loading = false,
 }: ContaCardProps) {
   return (
@@ -64,19 +64,20 @@ export function ContaCard({
           </Button>
 
           <Button
-            variant="outline"
-            className="text-red-500 border-red-500 hover:bg-red-600 hover:text-white text-xs px-4 py-1"
-            onClick={() => {
-              if (conta.id !== undefined) {
-                onExcluir(conta.id);
-              } else {
-                alert('ID da conta inválido');
-              }
-            }}
-            disabled={loading}
-          >
-            {loading ? "Excluindo..." : "Excluir"}
-          </Button>
+  variant="outline"
+  className="text-red-500 border-red-500 hover:bg-red-600 hover:text-white text-xs px-4 py-1"
+  onClick={() => {
+    if (conta.id !== undefined) {
+      onDelete(conta.id);
+    } else {
+      alert('ID da conta inválido');
+    }
+  }}
+  disabled={loading}
+>
+  {loading ? "Deleting..." : "Delete"}
+</Button>
+
         </div>
       </CardContent>
     </Card>
