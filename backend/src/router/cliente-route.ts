@@ -2,37 +2,39 @@ import express, { Router } from "express";
 import { CreateClientController } from "../controller/clientes/create-client-controller";
 import { GetAllClientsController } from "../controller/clientes/get-client-controller";
 import { DeleteClienteController } from "../controller/clientes/delete-client-controller";
-import { UpdateClient } from "../use-case/cliente/update-client-use-case";
 import { UpdateClienteController } from "../controller/clientes/update-client-controller";
+import { ClientMiddleware } from "../middleware/client-middleware";
 
 const router: Router = express.Router();
 
-const createUserController = new CreateClientController();
+const clientMiddleware = new ClientMiddleware();
+
+const createClientController = new CreateClientController();
 const getAllClientsController = new GetAllClientsController();
 const deleteClientController = new DeleteClienteController();
-const updateClientController = new UpdateClienteController(); 
-
-
+const updateClientController = new UpdateClienteController();
 
 router.post(
   "/client/createcliente",
-//   clienteMiddleware.handle.bind(clienteMiddleware),
-  createUserController.handle.bind(createUserController)
+  clientMiddleware.create.bind(clientMiddleware),
+  createClientController.handle.bind(createClientController)
 );
 
 router.get(
-  "/client/allclients", 
-  // getUsersMiddleware.handle.bind(getUsersMiddleware),
+  "/client/allclients",
+  clientMiddleware.getAll.bind(clientMiddleware),
   getAllClientsController.handle.bind(getAllClientsController)
 );
 
 router.delete(
-  "/client/deleteclient/:id", 
+  "/client/deleteclient/:id",
+  clientMiddleware.delete.bind(clientMiddleware),
   deleteClientController.handle.bind(deleteClientController)
 );
 
 router.put(
-  "/client/updateclient/:id", 
+  "/client/updateclient/:id",
+  clientMiddleware.update.bind(clientMiddleware),
   updateClientController.handle.bind(updateClientController)
 );
 
