@@ -16,20 +16,15 @@ export class CreateServiceController {
       });
       return;
     }
-
     const createServiceModel = new UpdateServiceModel(serviceData);
     const payload = createServiceModel.toPayload() as ICreateService;
-
     const createdService = await new CreateService().execute(payload);
-
     const { contaId } = req.body;
     const { valor } = payload;
-
     if (contaId && valor !== undefined) {
       const updatePayload: IUpdateConta = { valor };
       await new UpdateConta().execute(contaId, updatePayload);
     }
-
     const statusCode =
       typeof createdService?.code === "number" ? createdService.code : 201;
 

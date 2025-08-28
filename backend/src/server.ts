@@ -19,7 +19,6 @@ server.use(cors({
 server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
 
-// Rotas prefixadas com /api
 server.use("/api", StatusRouter);
 server.use("/api", ClienteRouter);
 server.use("/api", ServiceRouter);

@@ -7,7 +7,6 @@ import { IUpdateService } from "../../interfaces/services/update-service-interfa
 export class UpdateContaController {
   async handle(req: Request, res: Response): Promise<void> {
     const id = req.params?.id;
-
     if (!id) {
       res.status(400).send({
         code: 400,
@@ -15,11 +14,8 @@ export class UpdateContaController {
       });
       return;
     }
-
     const updateData: IUpdateConta = req.body;
-
     const updatedConta = await new UpdateConta().execute(id, updateData);
-
     res.status(typeof updatedConta.code === "number" ? updatedConta.code : 200).send(updatedConta);
 
     const { servicoId, valor, pago } = updateData;

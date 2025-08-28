@@ -8,17 +8,13 @@ import { ContaServiceMiddleware } from "../middleware/conta-middleware";
 
 const router: Router = express.Router();
 
-// Controllers
 const createContaController = new CreateContaController();
 const getAllContasController = new GetAllContasController();
 const updateContaController = new UpdateContaController();
 const deleteContaController = new DeleteContaController();
 const getServiceByIdController = new GetServiceByIdController();
 
-// Middleware
 const contaServiceMiddleware = new ContaServiceMiddleware();
-
-// ROTAS (mantidas conforme você pediu)
 
 router.post(
   "/conta/createconta",
