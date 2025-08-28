@@ -34,7 +34,6 @@ export default function ServicosPage() {
   const [servicoVisualizar, setServicoVisualizar] = useState<Servico | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
 
-  // Verifica se o usuário está logado
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (!storedUser) {

@@ -6,7 +6,6 @@ export class ServiceMiddleware {
     const url = req.originalUrl;
     const data = req.body;
 
-    // Middleware para criar serviço
     if (method === "POST" && url === "/api/services") {
       if (!data?.clienteId) {
         res.status(400).json({
@@ -17,7 +16,6 @@ export class ServiceMiddleware {
       }
     }
 
-    // Middleware para atualizar serviço
     if (method === "PUT" && url.startsWith("/api/services/")) {
       const id = req.params?.id;
 
@@ -38,7 +36,6 @@ export class ServiceMiddleware {
       }
     }
 
-    // Middleware para deletar serviço
     if (method === "DELETE" && url.startsWith("/api/services/")) {
       const { id } = req.params;
 
@@ -51,9 +48,7 @@ export class ServiceMiddleware {
       }
     }
 
-    // Middleware para pegar todos os serviços
     if (method === "GET" && url === "/api/services") {
-      // Nenhuma validação obrigatória por enquanto
     }
 
     next();

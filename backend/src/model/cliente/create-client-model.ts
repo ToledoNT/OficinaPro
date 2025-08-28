@@ -65,7 +65,6 @@ export class CreateClientModel {
     payload.cpf = this.cpf || "";
     if (this.email) payload.email = this.email;
 
-    // endereços e veículos como objetos diretos
     if (this.endereco) {
       payload.endereco = { ...this.endereco };
     }
