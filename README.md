@@ -86,3 +86,7 @@ npm run dev
 
 # Frontend
 npm run dev
+
+## 📌 Fim do README
+O **OficinaPro** está em constante evolução.  
+Sinta-se à vontade para contribuir, abrir issues ou sugerir melhorias! 🚀
