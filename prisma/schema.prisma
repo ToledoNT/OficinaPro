@@ -1,0 +1,315 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Workshop {
+  id        String   @id @default(uuid())
+  name      String
+  cnpj      String?
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users                 User[]
+  clients               Client[]
+  vehicles              Vehicle[]
+  budgets               Budget[]
+  workOrders            WorkOrder[]
+  histories             ServiceHistory[]
+  financialTransactions FinancialTransaction[]
+
+  @@map("workshops")
+}
+
+model User {
+  id                    String                 @id @default(uuid())
+  name                  String
+  email                 String                 @unique
+  passwordHash          String
+  role                  UserRole               @default(ADMIN)
+  status                UserStatus             @default(ATIVO)
+  workshopId            String
+  workshop              Workshop               @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  budgetsCreated        Budget[]
+  servicesResponsible   ServiceHistory[]
+  workOrders            WorkOrder[]
+  financialTransactions FinancialTransaction[]
+
+  @@index([workshopId])
+  @@map("users")
+}
+
+model Client {
+  id                    String                 @id @default(uuid())
+  name                  String
+  cpf                   String?
+  phone                 String
+  email                 String?
+  address               String?
+  notes                 String?
+  workshopId            String
+  workshop              Workshop               @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  budgets               Budget[]
+  vehicles              Vehicle[]
+  workOrders            WorkOrder[]
+  financialTransactions FinancialTransaction[]
+
+  @@unique([workshopId, cpf])
+  @@index([workshopId])
+  @@index([name])
+  @@index([cpf])
+  @@index([phone])
+  @@map("clients")
+}
+
+model Vehicle {
+  id         String           @id @default(uuid())
+  type       VehicleType      @default(CARRO)
+  brand      String?
+  model      String?
+  year       Int?
+  plate      String?
+  mileage    Int              @default(0)
+  color      String?
+  chassis    String?
+  notes      String?
+  workshopId String
+  workshop   Workshop         @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  clientId   String
+  budgets    Budget[]
+  history    ServiceHistory[]
+  workOrders WorkOrder[]
+  client     Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([workshopId, plate])
+  @@index([workshopId])
+  @@index([plate])
+  @@index([model])
+  @@index([clientId])
+  @@index([type])
+  @@map("vehicles")
+}
+
+model ServiceHistory {
+  id              String   @id @default(uuid())
+  date            DateTime @default(now())
+  mileage         Int
+  problemReported String
+  diagnosis       String
+  servicesDone    String
+  partsUsed       String?
+  notes           String?
+  totalAmount     Decimal  @db.Decimal(10, 2)
+  responsibleName String
+  vehicleId       String
+  userId          String?
+  workshopId      String
+  workshop        Workshop @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User?    @relation(fields: [userId], references: [id])
+  vehicle         Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([workshopId])
+  @@index([vehicleId])
+  @@index([date])
+  @@map("service_histories")
+}
+
+model Budget {
+  id             String       @id @default(uuid())
+  code           Int          @default(autoincrement())
+  date           DateTime     @default(now())
+  expirationDate DateTime
+  status         BudgetStatus @default(RASCUNHO)
+  notes          String?
+  subtotal       Decimal      @default(0) @db.Decimal(10, 2)
+  discount       Decimal      @default(0) @db.Decimal(10, 2)
+  totalAmount    Decimal      @default(0) @db.Decimal(10, 2)
+  clientId       String
+  vehicleId      String
+  userId         String?
+  workOrderId    String?      @unique
+  workshopId     String
+  workshop       Workshop     @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  items          BudgetItem[]
+  client         Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user           User?        @relation(fields: [userId], references: [id])
+  vehicle        Vehicle      @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  workOrder      WorkOrder?   @relation(fields: [workOrderId], references: [id])
+
+  @@index([workshopId])
+  @@index([clientId])
+  @@index([vehicleId])
+  @@index([status])
+  @@index([code])
+  @@map("budgets")
+}
+
+model WorkOrder {
+  id               String          @id @default(uuid())
+  code             Int             @default(autoincrement())
+  status           WorkOrderStatus @default(AGUARDANDO)
+  problemReported  String
+  diagnosis        String?
+  servicesDone     String?
+  partsUsed        String?
+  notes            String?
+  mileageIn        Int
+  mileageOut       Int?
+  estimatedAt      DateTime?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  totalAmount      Decimal         @default(0) @db.Decimal(10, 2)
+  responsibleName  String?
+
+  clientId         String
+  vehicleId        String
+  userId           String?
+  workshopId       String
+  workshop         Workshop        @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+  client           Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  vehicle          Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  user             User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  budget           Budget?
+  serviceHistoryId String?         @unique
+
+  financialTransactions FinancialTransaction[]
+
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([workshopId])
+  @@index([clientId])
+  @@index([vehicleId])
+  @@index([status])
+  @@index([code])
+  @@map("work_orders")
+}
+
+model BudgetItem {
+  id          String   @id @default(uuid())
+  type        ItemType @default(SERVICO)
+  description String
+  quantity    Decimal  @default(1) @db.Decimal(10, 2)
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  discount    Decimal  @default(0) @db.Decimal(10, 2)
+  subtotal    Decimal  @db.Decimal(10, 2)
+  budgetId    String
+  createdAt   DateTime @default(now())
+  budget      Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+
+  @@map("budget_items")
+}
+
+model FinancialTransaction {
+  id            String            @id @default(uuid())
+  code          Int               @default(autoincrement())
+  type          TransactionType   // RECEITA ou DESPESA
+  category      String            // 'SERVICOS', 'PECAS', 'FORNECEDOR', 'ALUGUEL', 'FOLHA', 'IMPOSTOS', 'OPERACIONAL', 'OUTROS'
+  description   String
+  amount        Decimal           @db.Decimal(10, 2)
+  dueDate       DateTime          // Data de vencimento
+  paymentDate   DateTime?         // Data do pagamento efetivo
+  status        TransactionStatus @default(PENDENTE) // PENDENTE, PAGO, CANCELADO
+  paymentMethod PaymentMethod?    // DINHEIRO, PIX, CARTAO_CREDITO, etc.
+  notes         String?
+
+  workshopId    String
+  workshop      Workshop          @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+  clientId      String?
+  client        Client?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  workOrderId   String?
+  workOrder     WorkOrder?        @relation(fields: [workOrderId], references: [id], onDelete: SetNull)
+
+  userId        String?
+  user          User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([workshopId])
+  @@index([type])
+  @@index([status])
+  @@index([dueDate])
+  @@index([paymentDate])
+  @@index([clientId])
+  @@index([workOrderId])
+  @@map("financial_transactions")
+}
+
+enum UserRole {
+  ADMIN
+  MECANICO
+  ATENDENTE
+}
+
+enum UserStatus {
+  ATIVO
+  INATIVO
+}
+
+enum VehicleType {
+  CARRO
+  MOTO
+}
+
+enum BudgetStatus {
+  RASCUNHO
+  ENVIADO
+  APROVADO
+  RECUSADO
+  EXPIRADO
+}
+
+enum ItemType {
+  SERVICO
+  PECA
+}
+
+enum WorkOrderStatus {
+  AGUARDANDO
+  EM_EXECUCAO
+  PAUSADO
+  CONCLUIDO
+  CANCELADO
+}
+
+enum TransactionType {
+  RECEITA
+  DESPESA
+}
+
+enum TransactionStatus {
+  PENDENTE
+  PAGO
+  CANCELADO
+}
+
+enum PaymentMethod {
+  DINHEIRO
+  PIX
+  CARTAO_CREDITO
+  CARTAO_DEBITO
+  BOLETO
+  TRANSFERENCIA
+  OUTRO
+}
