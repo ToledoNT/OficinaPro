@@ -2,7 +2,17 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Wrench, Car, Bike, Lock, Mail, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
+import {
+  Wrench,
+  Car,
+  Bike,
+  Lock,
+  Mail,
+  Eye,
+  EyeOff,
+  Loader2,
+  ShieldCheck,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
@@ -35,18 +45,14 @@ export default function LoginPage() {
       router.push('/');
       router.refresh();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Falha na autenticação';
+      const msg =
+        err instanceof Error ? err.message : 'Falha na autenticação';
+
       setErrorMsg(msg);
       toast.error(msg);
     } finally {
       setLoading(false);
     }
-  };
-
-  const fillCredentials = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setErrorMsg('');
   };
 
   return (
@@ -65,14 +71,23 @@ export default function LoginPage() {
               <Bike className="w-6 h-6 text-emerald-300" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">OficinaPro</h1>
-          <p className="text-sm text-slate-400 mt-1">Gestão de Oficina Mecânica • Carros & Motos</p>
+
+          <h1 className="text-3xl font-bold tracking-tight text-white">
+            OficinaPro
+          </h1>
+
+          <p className="text-sm text-slate-400 mt-1">
+            Gestão de Oficina Mecânica • Carros & Motos
+          </p>
         </div>
 
         {/* Card */}
         <div className="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl">
           <div className="mb-6">
-            <h2 className="text-xl font-semibold text-white">Acesse sua conta</h2>
+            <h2 className="text-xl font-semibold text-white">
+              Acesse sua conta
+            </h2>
+
             <p className="text-xs text-slate-400 mt-1">
               Entre com suas credenciais para gerenciar a oficina
             </p>
@@ -90,10 +105,12 @@ export default function LoginPage() {
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
                 E-mail Profissional
               </label>
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                   <Mail className="w-4 h-4" />
                 </div>
+
                 <input
                   type="email"
                   required
@@ -109,10 +126,12 @@ export default function LoginPage() {
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
                 Senha de Acesso
               </label>
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                   <Lock className="w-4 h-4" />
                 </div>
+
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
@@ -121,12 +140,17 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   className="w-full pl-9 pr-10 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                 />
+
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -149,39 +173,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* Quick Demo Fill Credentials */}
-          <div className="mt-8 pt-6 border-t border-slate-800/80">
-            <p className="text-xs text-slate-400 text-center mb-3 font-medium">
-              Contas de demonstração para teste:
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => fillCredentials('admin@oficinapro.com', 'admin123')}
-                className="px-2 py-1.5 bg-slate-800/60 hover:bg-slate-800 text-slate-300 rounded-lg text-xs transition-colors border border-slate-700/50 hover:border-blue-500/50 text-center cursor-pointer"
-              >
-                <div className="font-semibold text-blue-400">Admin</div>
-                <div className="text-[10px] text-slate-400">Carlos</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillCredentials('marcos@oficinapro.com', 'mecanico123')}
-                className="px-2 py-1.5 bg-slate-800/60 hover:bg-slate-800 text-slate-300 rounded-lg text-xs transition-colors border border-slate-700/50 hover:border-amber-500/50 text-center cursor-pointer"
-              >
-                <div className="font-semibold text-amber-400">Mecânico</div>
-                <div className="text-[10px] text-slate-400">Marcos</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillCredentials('juliana@oficinapro.com', 'atendente123')}
-                className="px-2 py-1.5 bg-slate-800/60 hover:bg-slate-800 text-slate-300 rounded-lg text-xs transition-colors border border-slate-700/50 hover:border-emerald-500/50 text-center cursor-pointer"
-              >
-                <div className="font-semibold text-emerald-400">Recepção</div>
-                <div className="text-[10px] text-slate-400">Juliana</div>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
